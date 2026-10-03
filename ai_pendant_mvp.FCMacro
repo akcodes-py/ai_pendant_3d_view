@@ -1,11 +1,11 @@
 # ============================================================
-# Brain2 AI Pendant - 3-Starboard Stacked Architecture
-# Updated: Front ON/OFF Switch is a White Latching Push-Push
-# Button (stepped cylindrical collar, round plunger, side tabs)
+# Brain2 AI Pendant - FreeCAD Model with ALL Parts Visible & Detailed
+# Sets all groups and objects to Visibility = True
+# Adds Semi-Transparency to enclosure so internal electronics are visible
+# Adds Exploded View alongside the assembled model
 # ============================================================
 import FreeCAD
 import Part
-import math
 import os
 
 doc_name = "AI_Pendant_MVP"
@@ -14,14 +14,11 @@ if doc_name in FreeCAD.listDocuments():
 
 doc = FreeCAD.newDocument(doc_name)
 
-# ------------------------------------------------------------
-# 1. PARAMETERS & EXACT MEASUREMENTS (mm)
-# ------------------------------------------------------------
 CARDBOARD_T = 2.0
 STARBOARD_T = 1.6
 CHAMFER_C   = 8.0
 
-# Components (Hand-scale measured)
+# Exact user measurements (mm)
 ESP32_L = 70.0; ESP32_W = 39.0; ESP32_H = 10.0
 SD_L    = 50.0; SD_W    = 25.0; SD_H    = 10.0
 BAT_L   = 37.0; BAT_W   = 25.0; BAT_H   = 5.0
@@ -29,12 +26,11 @@ TP_L    = 30.0; TP_W    = 18.0; TP_H    = 3.0
 BST_L   = 45.0; BST_W   = 23.0; BST_H   = 15.0
 MIC_L   = 14.0; MIC_W   = 11.0; MIC_H   = 3.5
 
-# Controls
-BUTTON_DIA     = 7.0   # Momentary Voice Button
-LED_DIA        = 5.0   # 5mm Blue LED
-ONOFF_BASE_W   = 8.0   # Latching power switch base
-ONOFF_COLLAR_D = 5.6   # Stepped circular boss
-ONOFF_PLUNGER_D= 3.8   # Round white push plunger
+BUTTON_DIA     = 7.0
+LED_DIA        = 5.0
+ONOFF_BASE_W   = 8.0
+ONOFF_COLLAR_D = 5.6
+ONOFF_PLUNGER_D= 3.8
 
 STARBOARD_W = 54.0
 STARBOARD_L = 82.0
@@ -43,35 +39,37 @@ PENDANT_W = STARBOARD_W + 2 * CARDBOARD_T + 4.0  # 62 mm
 PENDANT_H = STARBOARD_L + 2 * CARDBOARD_T + 4.0  # 90 mm
 PENDANT_D = 38.0                                  # 38 mm
 
-# Z Stack-up
 Z_BACK_CARD   = 0.0
 Z_STARBOARD_3 = Z_BACK_CARD + CARDBOARD_T + 1.0
 Z_STARBOARD_2 = Z_STARBOARD_3 + STARBOARD_T + 14.0
 Z_STARBOARD_1 = Z_STARBOARD_2 + STARBOARD_T + ESP32_H + 1.0
 Z_FRONT_CARD  = PENDANT_D - CARDBOARD_T
 
-# Colors
-C_CARDBOARD = (0.78, 0.62, 0.44, 0.0)
-C_WALLS     = (0.69, 0.53, 0.36, 0.0)
-C_STARBOARD = (0.12, 0.44, 0.22, 0.0)
-C_ESP32     = (0.12, 0.20, 0.65, 0.0)
-C_METAL     = (0.80, 0.82, 0.85, 0.0)
-C_MIC       = (0.45, 0.15, 0.55, 0.0)
-C_SD        = (0.15, 0.25, 0.45, 0.0)
-C_BAT       = (0.82, 0.84, 0.86, 0.0)
-C_TP        = (0.12, 0.52, 0.20, 0.0)
-C_BST       = (0.75, 0.20, 0.15, 0.0)
-C_LED       = (0.00, 0.82, 1.00, 0.1)
-C_BTN       = (0.12, 0.12, 0.12, 0.0)
-C_WHITE_SW  = (0.94, 0.94, 0.92, 0.0)  # White nylon switch body
-C_STANDOFF  = (0.88, 0.75, 0.25, 0.0)
-C_DIM       = (0.95, 0.20, 0.10, 0.0)
+# Colors (R, G, B, Transparency)
+C_CARDBOARD_OPAQUE = (0.78, 0.62, 0.44, 0.0)
+C_CARDBOARD_GLASS  = (0.78, 0.62, 0.44, 0.65)  # 65% transparent so internals are visible!
+C_WALLS_GLASS      = (0.69, 0.53, 0.36, 0.65)
+C_STARBOARD        = (0.12, 0.50, 0.22, 0.0)
+C_PADS             = (0.90, 0.75, 0.25, 0.0)
+C_ESP32            = (0.12, 0.20, 0.75, 0.0)
+C_METAL            = (0.82, 0.84, 0.88, 0.0)
+C_MIC              = (0.50, 0.15, 0.60, 0.0)
+C_SD               = (0.15, 0.30, 0.55, 0.0)
+C_BAT              = (0.85, 0.85, 0.85, 0.0)
+C_TP               = (0.12, 0.55, 0.22, 0.0)
+C_BST              = (0.80, 0.20, 0.15, 0.0)
+C_LED              = (0.00, 0.88, 1.00, 0.0)
+C_BTN              = (0.12, 0.12, 0.12, 0.0)
+C_WHITE_SW         = (0.95, 0.95, 0.92, 0.0)
+C_STANDOFF         = (0.90, 0.78, 0.25, 0.0)
+C_DIM              = (0.95, 0.20, 0.10, 0.0)
 
 def set_view(obj, color):
     try:
         obj.ViewObject.ShapeColor = (color[0], color[1], color[2])
-        if len(color) > 3:
-            obj.ViewObject.Transparency = int(color[3] * 100)
+        trans = int(color[3] * 100) if len(color) > 3 else 0
+        obj.ViewObject.Transparency = trans
+        obj.ViewObject.Visibility = True
     except Exception:
         pass
 
@@ -98,18 +96,19 @@ g_sb3   = doc.addObject("App::DocumentObjectGroup", "05_Starboard_3_Power_and_Ba
 g_walls = doc.addObject("App::DocumentObjectGroup", "06_Perimeter_Cardboard_Walls")
 g_back  = doc.addObject("App::DocumentObjectGroup", "07_Back_Cover_and_Lanyard")
 g_dims  = doc.addObject("App::DocumentObjectGroup", "08_Dimensions_and_Measurements")
+g_exp   = doc.addObject("App::DocumentObjectGroup", "09_Exploded_Layer_View")
+
+all_groups = [g_front, g_ctrl, g_sb1, g_sb2, g_sb3, g_walls, g_back, g_dims, g_exp]
 
 SB_X = (PENDANT_W - STARBOARD_W) / 2.0
 SB_Y = (PENDANT_H - STARBOARD_L) / 2.0
 
-# Coordinates for Front Elements:
 LED_X = PENDANT_W / 2.0
 LED_Y = PENDANT_H * 0.74
 
 BTN_X = PENDANT_W / 2.0
 BTN_Y = PENDANT_H * 0.48
 
-# White Push Latching ON/OFF switch (Lower center)
 SW_X = PENDANT_W / 2.0
 SW_Y = PENDANT_H * 0.24
 
@@ -117,31 +116,38 @@ MIC_X = SB_X + 4.0
 MIC_Y = SB_Y + STARBOARD_L - MIC_L - 4.0
 
 # ============================================================
-# 1. FRONT CARDBOARD COVER
+# 1. FRONT CARDBOARD COVER (Semi-transparent so internals show!)
 # ============================================================
 f_face = create_octagonal_face(PENDANT_W, PENDANT_H, CHAMFER_C, Z_FRONT_CARD)
 f_solid = f_face.extrude(FreeCAD.Vector(0, 0, CARDBOARD_T))
-
-# Holes:
-# Hole 1: Blue LED (Ø5.0 mm)
 hole_led = Part.makeCylinder(LED_DIA / 2.0 + 0.3, CARDBOARD_T + 2.0, FreeCAD.Vector(LED_X, LED_Y, Z_FRONT_CARD - 1.0))
-# Hole 2: Voice Push Button (Ø7.0 mm)
 hole_btn = Part.makeCylinder(BUTTON_DIA / 2.0 + 0.5, CARDBOARD_T + 2.0, FreeCAD.Vector(BTN_X, BTN_Y, Z_FRONT_CARD - 1.0))
-# Hole 3: White Latching ON/OFF Switch opening (Ø5.8 mm round collar hole)
 hole_sw  = Part.makeCylinder(ONOFF_COLLAR_D / 2.0 + 0.3, CARDBOARD_T + 2.0, FreeCAD.Vector(SW_X, SW_Y, Z_FRONT_CARD - 1.0))
-# Hole 4: Upper Microphone Sound Port (Ø1.8 mm)
 hole_mic = Part.makeCylinder(1.5, CARDBOARD_T + 2.0, FreeCAD.Vector(MIC_X + MIC_W/2.0, MIC_Y + MIC_L/2.0, Z_FRONT_CARD - 1.0))
 
 f_solid = f_solid.cut(hole_led).cut(hole_btn).cut(hole_sw).cut(hole_mic)
 f_obj = doc.addObject("Part::Feature", "Plate_01_Front_Cardboard")
 f_obj.Shape = f_solid
-set_view(f_obj, C_CARDBOARD)
+set_view(f_obj, C_CARDBOARD_GLASS)
 g_front.addObject(f_obj)
 
+# Front Chamfer Score Lines
+for (p1, p2) in [
+    ((CHAMFER_C, 0, Z_FRONT_CARD + CARDBOARD_T), (0, CHAMFER_C, Z_FRONT_CARD + CARDBOARD_T)),
+    ((PENDANT_W - CHAMFER_C, 0, Z_FRONT_CARD + CARDBOARD_T), (PENDANT_W, CHAMFER_C, Z_FRONT_CARD + CARDBOARD_T)),
+    ((PENDANT_W, PENDANT_H - CHAMFER_C, Z_FRONT_CARD + CARDBOARD_T), (PENDANT_W - CHAMFER_C, PENDANT_H, Z_FRONT_CARD + CARDBOARD_T)),
+    ((0, PENDANT_H - CHAMFER_C, Z_FRONT_CARD + CARDBOARD_T), (CHAMFER_C, PENDANT_H, Z_FRONT_CARD + CARDBOARD_T)),
+]:
+    crease = Part.makeCylinder(0.3, (FreeCAD.Vector(*p2) - FreeCAD.Vector(*p1)).Length, FreeCAD.Vector(*p1), FreeCAD.Vector(*p2) - FreeCAD.Vector(*p1))
+    c_obj = doc.addObject("Part::Feature", "Front_Cardboard_Bevel_Crease")
+    c_obj.Shape = crease
+    set_view(c_obj, (0.5, 0.35, 0.2, 0.0))
+    g_front.addObject(c_obj)
+
 # ============================================================
-# 2. FRONT CONTROLS (BLUE LED + VOICE PUSH BUTTON + WHITE LATCHING ON/OFF)
+# 2. FRONT CONTROLS (BLUE LED + VOICE BUTTON + WHITE LATCHING SWITCH)
 # ============================================================
-# 1. Blue LED
+# Blue LED
 led_d = Part.makeSphere(LED_DIA / 2.0, FreeCAD.Vector(LED_X, LED_Y, Z_FRONT_CARD + CARDBOARD_T + 0.5))
 led_b = Part.makeCylinder(LED_DIA / 2.0, CARDBOARD_T + 4.0, FreeCAD.Vector(LED_X, LED_Y, Z_STARBOARD_1 + STARBOARD_T + 1.0))
 led_obj = doc.addObject("Part::Feature", "Control_01_Blue_LED_5mm")
@@ -149,7 +155,7 @@ led_obj.Shape = led_b.fuse(led_d)
 set_view(led_obj, C_LED)
 g_ctrl.addObject(led_obj)
 
-# 2. Voice Push Button (Tactile Momentary)
+# Voice Push Button (Tactile Momentary)
 btn_base = Part.makeBox(8.0, 8.0, 4.0, FreeCAD.Vector(BTN_X - 4.0, BTN_Y - 4.0, Z_STARBOARD_1 + STARBOARD_T))
 btn_cap = Part.makeCylinder(BUTTON_DIA / 2.0, CARDBOARD_T + 5.0, FreeCAD.Vector(BTN_X, BTN_Y, Z_STARBOARD_1 + STARBOARD_T + 2.0))
 btn_obj = doc.addObject("Part::Feature", "Control_02_Push_Button_Switch")
@@ -157,19 +163,15 @@ btn_obj.Shape = btn_base.fuse(btn_cap)
 set_view(btn_obj, C_BTN)
 g_ctrl.addObject(btn_obj)
 
-# 3. White Latching Push-Push ON/OFF Switch (Matching user photograph)
-# Rectangular white nylon body
+# White Latching Push-Push Power Switch (Matching User Photo!)
 sw_base = Part.makeBox(ONOFF_BASE_W, ONOFF_BASE_W, 3.2, FreeCAD.Vector(SW_X - ONOFF_BASE_W/2.0, SW_Y - ONOFF_BASE_W/2.0, Z_STARBOARD_1 + STARBOARD_T))
-# Stepped circular boss / collar
 sw_collar = Part.makeCylinder(ONOFF_COLLAR_D / 2.0, 2.5, FreeCAD.Vector(SW_X, SW_Y, Z_STARBOARD_1 + STARBOARD_T + 3.2))
-# Round white plunger button extending through front panel
 sw_plunger = Part.makeCylinder(ONOFF_PLUNGER_D / 2.0, CARDBOARD_T + 4.0, FreeCAD.Vector(SW_X, SW_Y, Z_STARBOARD_1 + STARBOARD_T + 4.0))
-# Horizontal solder wings / tabs extending left and right
 sw_tab_left = Part.makeBox(3.5, 1.2, 0.4, FreeCAD.Vector(SW_X - ONOFF_BASE_W/2.0 - 3.5, SW_Y - 0.6, Z_STARBOARD_1 + STARBOARD_T + 0.2))
 sw_tab_right = Part.makeBox(3.5, 1.2, 0.4, FreeCAD.Vector(SW_X + ONOFF_BASE_W/2.0, SW_Y - 0.6, Z_STARBOARD_1 + STARBOARD_T + 0.2))
 
 sw_white_parts = sw_base.fuse(sw_collar).fuse(sw_plunger)
-sw_obj = doc.addObject("Part::Feature", "Control_03_White_Latching_Push_Switch")
+sw_obj = doc.addObject("Part::Feature", "Control_03_White_Latching_Power_Switch")
 sw_obj.Shape = sw_white_parts
 set_view(sw_obj, C_WHITE_SW)
 g_ctrl.addObject(sw_obj)
@@ -188,6 +190,15 @@ sb1_obj = doc.addObject("Part::Feature", "Plate_02_Starboard_1_Mic_and_SD")
 sb1_obj.Shape = sb1_solid
 set_view(sb1_obj, C_STARBOARD)
 g_sb1.addObject(sb1_obj)
+
+# Copper solder pad grid on Starboard 1
+for i in range(1, 8):
+    y_p = SB_Y + 10.0 + i * 8.0
+    strip = Part.makeBox(STARBOARD_W - 8.0, 0.8, 0.08, FreeCAD.Vector(SB_X + 4.0, y_p, Z_STARBOARD_1 + STARBOARD_T))
+    p_obj = doc.addObject("Part::Feature", f"SB1_Solder_Track_{i}")
+    p_obj.Shape = strip
+    set_view(p_obj, C_PADS)
+    g_sb1.addObject(p_obj)
 
 # INMP441 MEMS Mic on UPPER SIDE
 mic_box = Part.makeBox(MIC_W, MIC_L, MIC_H, FreeCAD.Vector(MIC_X, MIC_Y, Z_STARBOARD_1 + STARBOARD_T))
@@ -302,7 +313,7 @@ set_view(bat_obj, C_BAT)
 g_sb3.addObject(bat_obj)
 
 # ============================================================
-# 6. PERIMETER CARDBOARD SIDE WALLS
+# 6. PERIMETER CARDBOARD SIDE WALLS (Semi-Transparent)
 # ============================================================
 w_outer = create_octagonal_face(PENDANT_W, PENDANT_H, CHAMFER_C, CARDBOARD_T)
 w_inner = create_octagonal_face(PENDANT_W - 2*CARDBOARD_T, PENDANT_H - 2*CARDBOARD_T, CHAMFER_C - CARDBOARD_T, CARDBOARD_T)
@@ -311,14 +322,13 @@ inner_s.Placement.Base = FreeCAD.Vector(CARDBOARD_T, CARDBOARD_T, CARDBOARD_T)
 outer_s = w_outer.extrude(FreeCAD.Vector(0, 0, PENDANT_D - 2*CARDBOARD_T))
 walls_s = outer_s.cut(inner_s)
 
-# Side Cutouts
 usb_cut = Part.makeBox(CARDBOARD_T * 2.0, 11.0, 6.5, FreeCAD.Vector(PENDANT_W - CARDBOARD_T - 1.0, TP_Y + (TP_L - 11.0)/2.0, Z_STARBOARD_3 + 1.0))
 usb_cut2 = Part.makeBox(CARDBOARD_T * 2.0, 14.0, 6.5, FreeCAD.Vector(PENDANT_W - CARDBOARD_T - 1.0, SD_Y + 4.0, Z_STARBOARD_1 + 1.0))
 walls_s = walls_s.cut(usb_cut).cut(usb_cut2)
 
 walls_obj = doc.addObject("Part::Feature", "Plate_05_Perimeter_Cardboard_Walls")
 walls_obj.Shape = walls_s
-set_view(walls_obj, C_WALLS)
+set_view(walls_obj, C_WALLS_GLASS)
 g_walls.addObject(walls_obj)
 
 # ============================================================
@@ -328,7 +338,7 @@ b_face = create_octagonal_face(PENDANT_W, PENDANT_H, CHAMFER_C, Z_BACK_CARD)
 b_solid = b_face.extrude(FreeCAD.Vector(0, 0, CARDBOARD_T))
 b_obj = doc.addObject("Part::Feature", "Plate_06_Back_Cardboard")
 b_obj.Shape = b_solid
-set_view(b_obj, C_CARDBOARD)
+set_view(b_obj, C_CARDBOARD_OPAQUE)
 g_back.addObject(b_obj)
 
 anchor = Part.makeBox(16.0, 6.0, 8.0, FreeCAD.Vector(PENDANT_W/2.0 - 8.0, PENDANT_H - 3.0, PENDANT_D/2.0 - 4.0))
@@ -362,8 +372,60 @@ add_dim("DIM_Width_62mm", (0, -3, Z_FRONT_CARD + CARDBOARD_T), (PENDANT_W, -3, Z
 add_dim("DIM_Height_90mm", (-3, 0, Z_FRONT_CARD + CARDBOARD_T), (-3, PENDANT_H, Z_FRONT_CARD + CARDBOARD_T), (-10, 0, 0), g_dims)
 add_dim("DIM_Depth_38mm", (PENDANT_W + 3, 20, 0), (PENDANT_W + 3, 20, PENDANT_D), (10, 0, 0), g_dims)
 
+# ============================================================
+# 9. EXPLODED LAYER SEPARATION (Shifted to right X = +90 mm)
+# ============================================================
+EXP_X = PENDANT_W + 70.0
+Z_STEP = 18.0
+
+exploded_items = [
+    ("EXP_01_Back_Cardboard", b_solid.copy(), C_CARDBOARD_OPAQUE),
+    ("EXP_02_Starboard_3_Power", sb3_solid.copy(), C_STARBOARD),
+    ("EXP_03_LiPo_Battery_800mAh", bat_full.copy(), C_BAT),
+    ("EXP_04_TP4056_Charger", tp_full.copy(), C_TP),
+    ("EXP_05_Boost_Converter_5V", bst_full.copy(), C_BST),
+    ("EXP_06_Starboard_2_ESP32", sb2_solid.copy(), C_STARBOARD),
+    ("EXP_07_ESP32_DevKit_Board", esp_full.copy(), C_ESP32),
+    ("EXP_08_Starboard_1_Mic_SD", sb1_solid.copy(), C_STARBOARD),
+    ("EXP_09_INMP441_Upper_Mic", mic_box.copy(), C_MIC),
+    ("EXP_10_MicroSD_Card_Adapter", sd_full.copy(), C_SD),
+    ("EXP_11_White_Latching_Switch", sw_white_parts.copy(), C_WHITE_SW),
+    ("EXP_12_Voice_Push_Button", btn_obj.Shape.copy(), C_BTN),
+    ("EXP_13_Blue_Indicator_LED", led_obj.Shape.copy(), C_LED),
+    ("EXP_14_Front_Cardboard_Cover", f_solid.copy(), C_CARDBOARD_OPAQUE),
+]
+
+for idx, (exp_name, exp_shape, exp_color) in enumerate(exploded_items):
+    z_pos = idx * Z_STEP
+    s = exp_shape.copy()
+    s.translate(FreeCAD.Vector(EXP_X, 0, z_pos))
+    obj = doc.addObject("Part::Feature", exp_name)
+    obj.Shape = s
+    set_view(obj, exp_color)
+    g_exp.addObject(obj)
+
+# Exploded vertical guide line
+guide = Part.makeCylinder(0.3, len(exploded_items) * Z_STEP, FreeCAD.Vector(EXP_X + PENDANT_W/2.0, PENDANT_H/2.0, 0))
+guide_obj = doc.addObject("Part::Feature", "EXP_Vertical_Stack_Guide")
+guide_obj.Shape = guide
+set_view(guide_obj, (0.5, 0.5, 0.5, 0.3))
+g_exp.addObject(guide_obj)
+
+# Ensure ALL groups and objects have Visibility = True
+for grp in all_groups:
+    try:
+        grp.ViewObject.Visibility = True
+    except Exception:
+        pass
+
+for obj in doc.Objects:
+    try:
+        obj.ViewObject.Visibility = True
+    except Exception:
+        pass
+
 doc.recompute()
 
 out_fcstd = r"C:\Users\Atul Kumar\Desktop\brain2-pendant-cad\ai_pendant_mvp.FCStd"
 doc.saveAs(out_fcstd)
-print(f"SUCCESS: White Latching Switch model saved to {out_fcstd}")
+print(f"SUCCESS: All parts set to VISIBLE and saved to {out_fcstd}")

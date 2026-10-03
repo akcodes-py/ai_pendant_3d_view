@@ -3,27 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brain2 AI Pendant - White Latching Push-Push Power Switch + Voice Button + Blue LED</title>
+  <title>Brain2 Wearable AI Pendant - 3D CAD & Electronics Viewer</title>
+  <meta name="description" content="Interactive 3D CAD & Electronics Viewer for the Brain2 Wearable AI Pendant. Features assembled solid view, transparent X-ray internal view, layer-by-layer exploded stack, and FreeCAD Model Tree layer visibility toggles.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16;
-      --panel: rgba(16, 23, 38, 0.95);
-      --border: #253348;
-      --accent: #2563eb;
-      --accent-glow: #38bdf8;
-      --led: #00e5ff;
-      --gold: #fbbf24;
-      --text: #f8fafc;
+      --bg: #070b14;
+      --panel-bg: rgba(13, 20, 36, 0.90);
+      --panel-border: rgba(56, 189, 248, 0.22);
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --text: #f1f5f9;
       --muted: #94a3b8;
+      --starboard-green: #15803d;
+      --esp-blue: #1e40af;
+      --latch-white: #f8fafc;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
+      background-color: var(--bg);
       color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
       overflow: hidden;
       width: 100vw;
       height: 100vh;
+      user-select: none;
     }
     #canvas-container {
       width: 100%;
@@ -33,89 +39,234 @@
       left: 0;
       z-index: 1;
     }
-    header {
+    
+    /* Dual Choice Top Bar */
+    .top-choice-bar {
       position: absolute;
       top: 14px;
-      left: 18px;
-      z-index: 10;
-      background: var(--panel);
-      backdrop-filter: blur(14px);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      background: rgba(13, 20, 36, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 40px;
+      padding: 6px 10px;
       display: flex;
       align-items: center;
-      gap: 14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      gap: 6px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.2);
     }
-    header h1 {
-      font-size: 1.05rem;
+    .choice-label {
+      font-size: 0.72rem;
       font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .badge-stack {
-      font-size: 0.7rem;
       text-transform: uppercase;
-      background: #0f172a;
-      color: #38bdf8;
-      border: 1px solid #0284c7;
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      padding: 0 8px;
     }
-    .overlay-panel {
+    .choice-btn {
+      background: #151f30;
+      border: 1px solid #26354a;
+      color: #cbd5e1;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .choice-btn:hover {
+      border-color: var(--accent);
+      color: #fff;
+      background: #1e2c44;
+    }
+    .choice-btn.active {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border-color: #38bdf8;
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
+    }
+
+    /* Floating UI Panels */
+    .ui-panel {
       position: absolute;
       z-index: 10;
-      background: var(--panel);
+      background: var(--panel-bg);
       backdrop-filter: blur(14px);
-      border: 1px solid var(--border);
+      border: 1px solid var(--panel-border);
       border-radius: 14px;
       padding: 16px;
-      box-shadow: 0 14px 40px rgba(0,0,0,0.65);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+      transition: all 0.25s ease;
     }
-    #controls-panel {
+    
+    #left-panel {
       top: 75px;
       left: 18px;
-      width: 335px;
+      width: 360px;
       max-height: calc(100vh - 95px);
       overflow-y: auto;
     }
     #details-panel {
       top: 14px;
       right: 18px;
-      width: 365px;
+      width: 380px;
       max-height: calc(100vh - 35px);
       overflow-y: auto;
     }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .panel-header h2 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge-tag {
+      font-size: 0.65rem;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
     .section-title {
-      font-size: 0.8rem;
+      font-size: 0.74rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--muted);
-      margin-bottom: 10px;
+      margin: 12px 0 8px 0;
       font-weight: 700;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .slider-box {
+
+    /* FreeCAD Model Tree in Photo */
+    .cad-tree {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      overflow: hidden;
       margin-bottom: 14px;
-      background: rgba(15, 23, 42, 0.6);
+    }
+    .tree-root-item {
+      background: #111c30;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #e2e8f0;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tree-actions {
+      display: flex;
+      gap: 4px;
+    }
+    .btn-tree-action {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-tree-action:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .tree-node {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .tree-node:hover {
+      background: rgba(56, 189, 248, 0.1);
+    }
+    .tree-node.selected {
+      background: rgba(56, 189, 248, 0.2);
+      border-left: 3px solid var(--accent);
+    }
+    .tree-node-left {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+    }
+    .tree-icon {
+      font-size: 0.9rem;
+    }
+    .tree-eye {
+      width: 26px;
+      height: 24px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: all 0.15s;
+    }
+    .tree-eye:hover {
+      background: #334155;
+    }
+    .tree-eye.hidden-eye {
+      background: #3f1d24;
+      border-color: #ef4444;
+      color: #f87171;
+    }
+
+    /* Slider Box */
+    .slider-box {
+      background: rgba(15, 23, 42, 0.7);
       padding: 10px 12px;
       border-radius: 10px;
       border: 1px solid #1e293b;
+      margin-bottom: 12px;
     }
-    .slider-title {
+    .slider-header {
       display: flex;
       justify-content: space-between;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       margin-bottom: 6px;
     }
-    .slider-title span.val {
+    .slider-header span.val {
       font-weight: 700;
-      color: #38bdf8;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
     }
     input[type=range] {
       width: 100%;
@@ -133,65 +284,13 @@
       background: #0284c7;
       cursor: pointer;
       box-shadow: 0 0 10px #38bdf8;
+      border: 2px solid #fff;
     }
-    .layer-selector {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 14px;
-    }
-    .btn-layer {
-      background: #151f30;
-      border: 1px solid #29384f;
-      color: #e2e8f0;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: left;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      transition: all 0.2s;
-    }
-    .btn-layer:hover, .btn-layer.active {
-      background: #1e3a8a;
-      border-color: #38bdf8;
-      color: #fff;
-    }
-    .btn-layer span.tag {
-      font-size: 0.68rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(0,0,0,0.3);
-      color: #94a3b8;
-    }
-    .btn-grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-    button.btn-action {
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: #e2e8f0;
-      padding: 7px 4px;
-      border-radius: 8px;
-      font-size: 0.74rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    button.btn-action:hover {
-      background: var(--accent);
-      color: #fff;
-    }
-    /* Front Controls Dual Simulator */
+
+    /* Hardware Simulator Box */
     .controls-sim-box {
       background: linear-gradient(135deg, #182234, #0f172a);
-      border: 1px solid #334155;
+      border: 1px solid rgba(56, 189, 248, 0.25);
       padding: 12px;
       border-radius: 12px;
       margin-bottom: 14px;
@@ -206,13 +305,13 @@
       margin-bottom: 0;
     }
     .btn-clicky-ui {
-      background: #f1f5f9;
+      background: #f8fafc;
       border: 2px solid #cbd5e1;
       color: #0f172a;
-      padding: 5px 12px;
+      padding: 6px 14px;
       border-radius: 6px;
       font-size: 0.76rem;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -257,245 +356,339 @@
       background: #00e5ff;
       box-shadow: 0 0 14px #00e5ff, 0 0 24px #00e5ff;
     }
+
+    /* Camera Buttons Grid */
+    .btn-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+    button.btn-camera {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 6px 2px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button.btn-camera:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* Component Info Card in Details Panel */
+    .comp-info-card {
+      background: #0d1527;
+      border: 1px solid #1e2e4a;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .comp-info-card h3 {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .comp-info-card p {
+      font-size: 0.74rem;
+      color: #94a3b8;
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
     table.specs-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.75rem;
-      margin-bottom: 14px;
+      font-size: 0.74rem;
+      margin-bottom: 8px;
     }
     table.specs-table th {
       text-align: left;
       color: var(--muted);
-      padding: 6px 4px;
-      border-bottom: 1px solid #283548;
+      padding: 5px 4px;
+      border-bottom: 1px solid #1e293b;
     }
     table.specs-table td {
-      padding: 6px 4px;
-      border-bottom: 1px solid #1a2333;
+      padding: 5px 4px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     .val-dim {
       font-weight: 700;
-      color: #38bdf8;
-      font-family: monospace;
-      font-size: 0.8rem;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
     }
-    .comp-info-card {
-      background: #141c2c;
-      border: 1px solid #243248;
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 8px;
-    }
-    .comp-info-card h4 {
-      font-size: 0.82rem;
-      color: #f1f5f9;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 4px;
-    }
-    .comp-info-card p {
-      font-size: 0.73rem;
-      color: #94a3b8;
-      line-height: 1.35;
-    }
-    .pinout-tag {
-      font-size: 0.65rem;
-      background: #0f172a;
-      color: #38bdf8;
-      padding: 2px 6px;
-      border-radius: 4px;
-      display: inline-block;
-      margin-top: 4px;
-      border: 1px solid #1e3a8a;
-    }
-    .bottom-hint {
+
+    /* Bottom Status Pill */
+    .bottom-pill {
       position: absolute;
       bottom: 14px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
-      background: rgba(15, 23, 42, 0.88);
+      background: rgba(15, 23, 42, 0.92);
       border: 1px solid #334155;
+      border-radius: 30px;
       padding: 6px 18px;
-      border-radius: 999px;
       font-size: 0.75rem;
-      color: #cbd5e1;
-      pointer-events: none;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
   </style>
+
+  <!-- Three.js + OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
-
-  <header>
-    <h1>Brain2 AI Pendant <span>White Latching Power Switch + Push Button</span></h1>
-    <span class="badge-stack">Stacked Architecture</span>
-  </header>
-
   <div id="canvas-container"></div>
 
-  <!-- Left: Controls & Simulator -->
-  <div class="overlay-panel" id="controls-panel">
+  <!-- CHOICE BAR: Both Ways as Requested! -->
+  <div class="top-choice-bar">
+    <span class="choice-label">View Choice:</span>
+    <button class="choice-btn" id="btn-choice-earlier" onclick="setViewMode('earlier')">
+      <span>📦</span> Earlier View (Solid Enclosure)
+    </button>
+    <button class="choice-btn" id="btn-choice-xray" onclick="setViewMode('xray')">
+      <span>🔮</span> Internal X-Ray (Translucent)
+    </button>
+    <button class="choice-btn active" id="btn-choice-tree" onclick="setViewMode('tree')">
+      <span>📁</span> Model Tree (As in Photo)
+    </button>
+    <button class="choice-btn" id="btn-choice-exploded" onclick="setViewMode('exploded')">
+      <span>💥</span> Exploded Stack
+    </button>
+  </div>
+
+  <!-- LEFT CONTROL & MODEL TREE PANEL -->
+  <div class="ui-panel" id="left-panel">
+    <div class="panel-header">
+      <h2><span>💎</span> Brain2 AI Pendant CAD</h2>
+      <span class="badge-tag">FreeCAD v1.1</span>
+    </div>
+
+    <!-- FreeCAD Model Tree (Matching User's Photo!) -->
     <div class="section-title">
-      <span>Front Controls Simulator</span>
-      <span style="color:#00e5ff;">Interactive</span>
-    </div>
-
-    <!-- Dual Button Simulator Box -->
-    <div class="controls-sim-box">
-      <!-- 1. White Latching Push-Push ON/OFF Power Switch -->
-      <div class="sim-row">
-        <div>
-          <div style="font-size:0.8rem; font-weight:700;">1. White Power Switch</div>
-          <div style="font-size:0.68rem; color:#94a3b8;" id="pwr-status-text">State: Latched ON (Power Active)</div>
-        </div>
-        <button class="btn-clicky-ui latched" id="pwr-clicky-btn" onclick="togglePowerSwitch()">
-          <span id="clicky-icon">●</span> <span id="clicky-text">ON</span>
-        </button>
-      </div>
-
-      <!-- 2. Push Button (Voice / AI Record) -->
-      <div class="sim-row" style="margin-top: 8px;">
-        <div>
-          <div style="font-size:0.8rem; font-weight:700;">2. Voice Push Button</div>
-          <div style="font-size:0.68rem; color:#94a3b8;" id="record-status-text">Ready for trigger</div>
-        </div>
-        <button class="btn-push-ui" id="push-btn" onclick="triggerPushAction()">Press Button</button>
-      </div>
-
-      <!-- 3. Blue LED Status -->
-      <div class="sim-row" style="margin-top: 8px; border-top:1px solid #283548; padding-top:8px;">
-        <span style="font-size:0.75rem; color:#cbd5e1;">Front Blue LED:</span>
-        <div class="led-indicator-dot active" id="sim-led"></div>
+      <span>FreeCAD Model Tree Hierarchy</span>
+      <div class="tree-actions">
+        <button class="btn-tree-action" onclick="toggleAllLayers(true)">All 👁️</button>
+        <button class="btn-tree-action" onclick="toggleAllLayers(false)">None 🚫</button>
       </div>
     </div>
+    
+    <div class="cad-tree" id="model-tree">
+      <div class="tree-root-item">
+        <span>📄 ai_pendant_mvp</span>
+        <span style="font-size:0.68rem; color:#38bdf8;">Octagonal 62×90×38mm</span>
+      </div>
 
+      <!-- Node 01 -->
+      <div class="tree-node" id="node-01" onclick="selectNode('01')">
+        <div class="tree-node-left">
+          <span class="tree-icon">📁</span>
+          <span>_01_Front_Cardboard_Cover</span>
+        </div>
+        <div class="tree-eye" id="eye-01" onclick="toggleLayer('01', event)">👁️</div>
+      </div>
+
+      <!-- Node 02 -->
+      <div class="tree-node" id="node-02" onclick="selectNode('02')">
+        <div class="tree-node-left">
+          <span class="tree-icon">📁</span>
+          <span>_02_Front_Controls_Switches_LED</span>
+        </div>
+        <div class="tree-eye" id="eye-02" onclick="toggleLayer('02', event)">👁️</div>
+      </div>
+
+      <!-- Node 03 -->
+      <div class="tree-node" id="node-03" onclick="selectNode('03')">
+        <div class="tree-node-left">
+          <span class="tree-icon">📁</span>
+          <span>_03_Starboard_1_Upper_Mic_and_SD_Card</span>
+        </div>
+        <div class="tree-eye" id="eye-03" onclick="toggleLayer('03', event)">👁️</div>
+      </div>
+
+      <!-- Node 04 -->
+      <div class="tree-node" id="node-04" onclick="selectNode('04')">
+        <div class="tree-node-left">
+          <span class="tree-icon">📁</span>
+          <span>_04_Starboard_2_ESP32_DevKit</span>
+        </div>
+        <div class="tree-eye" id="eye-04" onclick="toggleLayer('04', event)">👁️</div>
+      </div>
+
+      <!-- Node 05 -->
+      <div class="tree-node" id="node-05" onclick="selectNode('05')">
+        <div class="tree-node-left">
+          <span class="tree-icon">📁</span>
+          <span>_05_Starboard_3_Power_and_Battery</span>
+        </div>
+        <div class="tree-eye" id="eye-05" onclick="toggleLayer('05', event)">👁️</div>
+      </div>
+
+      <!-- Node 06 -->
+      <div class="tree-node" id="node-06" onclick="selectNode('06')">
+        <div class="tree-node-left">
+          <span class="tree-icon">📁</span>
+          <span>_06_Perimeter_Cardboard_Walls</span>
+        </div>
+        <div class="tree-eye" id="eye-06" onclick="toggleLayer('06', event)">👁️</div>
+      </div>
+
+      <!-- Node 07 -->
+      <div class="tree-node" id="node-07" onclick="selectNode('07')">
+        <div class="tree-node-left">
+          <span class="tree-icon">📁</span>
+          <span>_07_Back_Cover_and_Lanyard</span>
+        </div>
+        <div class="tree-eye" id="eye-07" onclick="toggleLayer('07', event)">👁️</div>
+      </div>
+
+      <!-- Node 08 -->
+      <div class="tree-node" id="node-08" onclick="selectNode('08')">
+        <div class="tree-node-left">
+          <span class="tree-icon">📁</span>
+          <span>_08_Dimensions_and_Measurements</span>
+        </div>
+        <div class="tree-eye" id="eye-08" onclick="toggleLayer('08', event)">👁️</div>
+      </div>
+    </div>
+
+    <!-- Exploded Separation Slider -->
     <div class="section-title">
-      <span>Vertical Layer Explosion</span>
+      <span>Exploded 3D Separation</span>
     </div>
-
-    <!-- Explode Slider -->
     <div class="slider-box">
-      <div class="slider-title">
-        <span>Layer Separation</span>
+      <div class="slider-header">
+        <span>Z-Stack Explosion Offset:</span>
         <span class="val" id="explode-display">0 mm</span>
       </div>
       <input type="range" id="explode-range" min="0" max="100" value="0">
     </div>
 
-    <!-- Quick Camera Views -->
-    <div class="btn-grid-3">
-      <button class="btn-action" onclick="setCam('front')">Front</button>
-      <button class="btn-action" onclick="setCam('side')">Side (SD+USB)</button>
-      <button class="btn-action" onclick="setCam('back')">Back</button>
-      <button class="btn-action" onclick="setCam('top')">Top (Mic)</button>
-      <button class="btn-action" onclick="setCam('iso')">Isometric</button>
-      <button class="btn-action" onclick="resetAll()">Reset</button>
-    </div>
-
-    <!-- Layer Isolation Selector -->
+    <!-- Camera View Quick Buttons -->
     <div class="section-title">
-      <span>Focus Layer</span>
+      <span>Standard Camera Angles</span>
+    </div>
+    <div class="btn-grid-4">
+      <button class="btn-camera" onclick="setCam('iso')">Isometric</button>
+      <button class="btn-camera" onclick="setCam('front')">Front</button>
+      <button class="btn-camera" onclick="setCam('side')">Side</button>
+      <button class="btn-camera" onclick="setCam('top')">Top</button>
     </div>
 
-    <div class="layer-selector">
-      <button class="btn-layer active" onclick="focusLayer('all')">
-        <span>All Layers (Complete Stack)</span>
-        <span class="tag">Assembly</span>
-      </button>
-      <button class="btn-layer" onclick="focusLayer('cardboard_front')">
-        <span>1. Front Cover (Holes for 2 Buttons + LED)</span>
-        <span class="tag">Plate 1</span>
-      </button>
-      <button class="btn-layer" onclick="focusLayer('sb1')">
-        <span>2. Starboard 1: Upper Mic + SD + 2 Buttons</span>
-        <span class="tag">Deck 1</span>
-      </button>
-      <button class="btn-layer" onclick="focusLayer('sb2')">
-        <span>3. Starboard 2: ESP32-S3 DevKit</span>
-        <span class="tag">Deck 2</span>
-      </button>
-      <button class="btn-layer" onclick="focusLayer('sb3')">
-        <span>4. Starboard 3: Booster + Charger + Battery</span>
-        <span class="tag">Deck 3</span>
-      </button>
-      <button class="btn-layer" onclick="focusLayer('cardboard_back')">
-        <span>5. Enclosure Walls & Back</span>
-        <span class="tag">Plate 5</span>
-      </button>
+    <!-- Front Controls Dual Hardware Simulator -->
+    <div class="section-title">
+      <span>Physical Switches Simulator</span>
+    </div>
+    <div class="controls-sim-box">
+      <!-- 1. White Latching Power Switch -->
+      <div class="sim-row">
+        <div>
+          <div style="font-size:0.76rem; font-weight:700; color:#fff;">1. White Power Switch</div>
+          <div style="font-size:0.68rem; color:#94a3b8;" id="pwr-status-text">State: Latched ON</div>
+        </div>
+        <button class="btn-clicky-ui latched" id="pwr-clicky-btn" onclick="togglePowerSwitch()">
+          <span>⚡</span> <span id="clicky-text">ON</span>
+        </button>
+      </div>
+
+      <div style="height:1px; background:#1e293b; margin:10px 0;"></div>
+
+      <!-- 2. Voice Push Button + Blue LED -->
+      <div class="sim-row">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="led-indicator-dot active" id="sim-led"></div>
+          <div>
+            <div style="font-size:0.76rem; font-weight:700; color:#fff;">2. Voice Record Button</div>
+            <div style="font-size:0.68rem; color:#38bdf8;" id="record-status-text">Ready for trigger</div>
+          </div>
+        </div>
+        <button class="btn-push-ui" id="push-btn" onclick="triggerPushAction()">
+          🎙️ PUSH
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Right: Exact Dimensions & Placement Specs -->
-  <div class="overlay-panel" id="details-panel">
+  <!-- RIGHT DETAILS & LAYER INSPECTOR PANEL -->
+  <div class="ui-panel" id="details-panel">
+    <div class="panel-header">
+      <h2><span id="detail-title-icon">🔍</span> <span id="detail-title">Selected Component</span></h2>
+      <span class="badge-tag" id="detail-badge">Active</span>
+    </div>
+
+    <div class="comp-info-card" id="detail-card">
+      <h3 id="card-heading">3-Tier Modular Starboard AI Pendant</h3>
+      <p id="card-desc">Click on any layer node in the FreeCAD Model Tree to view detailed physical dimensions, wiring paths, and placement specs.</p>
+      
+      <table class="specs-table" id="card-table">
+        <tr><th>Total Outer Dimensions</th><td class="val-dim">62 × 90 × 38 mm</td></tr>
+        <tr><th>Cardboard Wall Thickness</th><td class="val-dim">2.0 mm Octagonal Shell</td></tr>
+        <tr><th>3-Deck Internal Clearance</th><td class="val-dim">54 × 82 mm Perforated Starboards</td></tr>
+        <tr><th>Upper Sound Pinhole</th><td class="val-dim">Ø 3.6 mm Acoustic Channel</td></tr>
+        <tr><th>Right Side Port Cutouts</th><td class="val-dim">USB-C 11×6mm & SD 14×6mm</td></tr>
+      </table>
+    </div>
+
+    <!-- Quick Architecture Summary -->
     <div class="section-title">
-      <span>Front Controls Specification</span>
-      <span style="color:#fbbf24;">Hardware Match</span>
+      <span>Modular 3-Tier Layer Architecture</span>
     </div>
-
-    <table class="specs-table">
-      <thead>
-        <tr><th>Control Item</th><th>Physical Component</th><th>Location</th><th>Wiring</th></tr>
-      </thead>
-      <tbody>
-        <tr><td><strong>1. Indicator LED</strong></td><td>5mm Blue Through-hole</td><td>Upper Center (Y=72mm)</td><td class="val-dim">GPIO 2 (220Ω)</td></tr>
-        <tr><td><strong>2. Voice Button</strong></td><td>Round Tactile Momentary</td><td>Mid Center (Y=46mm)</td><td class="val-dim">GPIO 0 / Pullup</td></tr>
-        <tr><td><strong>3. Power Switch</strong></td><td>White Push-Push Latching</td><td>Lower Center (Y=24mm)</td><td class="val-dim">Li-Po Power Cut</td></tr>
-        <tr><td><strong>4. Upper MEMS Mic</strong></td><td>INMP441 I2S Port</td><td>Top-Left (Y=74mm)</td><td class="val-dim">GPIO 14, 15, 32</td></tr>
-      </tbody>
-    </table>
-
-    <div class="section-title">
-      <span>White Latching Switch Details</span>
-    </div>
-
-    <!-- Switch Details Card -->
-    <div class="comp-info-card">
-      <h4><span style="color:#f8fafc;">⚪</span> White Push-Push Power Switch</h4>
-      <p>Matches your physical component in photograph:
-      <br>• <strong>White Nylon Body</strong>: 8 × 8 mm base with stepped collar ($\varnothing 5.6\text{ mm}$).
-      <br>• <strong>Round Plunger</strong>: $\varnothing 3.8\text{ mm}$ cylindrical button that latches down on click (ON) and springs up on second click (OFF).
-      <br>• <strong>Side Solder Tabs</strong>: Dual horizontal metal wing tabs extending $3.5\text{ mm}$ each side for in-line battery connection.</p>
-      <div class="pinout-tag">Circuit: Battery B+ → Side Tab 1 | Side Tab 2 → Boost IN+</div>
-    </div>
-
-    <!-- Deck 1 -->
-    <div class="comp-info-card">
-      <h4><span style="color:#22c55e;">●</span> Starboard 1 (Front Deck): Mic + SD + Controls</h4>
-      <p>Directly beneath the front cardboard cover. Houses:
-      <br>• <strong>Upper-Side INMP441 Mic</strong> directly behind top acoustic hole.
-      <br>• <strong>5mm Blue Indicator LED</strong> with dome extending through the front.
-      <br>• <strong>Round Voice Push Button</strong> for thumb activation / AI trigger.
-      <br>• <strong>White Latching Power Switch</strong> for system power control.
-      <br>• <strong>MicroSD card reader</strong> on the side edge for direct card insertion.</p>
-    </div>
-
-    <!-- Deck 2 -->
-    <div class="comp-info-card">
-      <h4><span style="color:#38bdf8;">●</span> Starboard 2 (Middle Deck): ESP32-S3</h4>
-      <p>Centrally positioned microcontroller tier. Mounts the <strong>ESP32-S3 DevKit (70 × 39 × 10 mm)</strong> with dual header pin rows routing signals upward to Deck 1 and power downward to Deck 3.</p>
-    </div>
-
-    <!-- Deck 3 -->
-    <div class="comp-info-card">
-      <h4><span style="color:#ef4444;">●</span> Starboard 3 (Bottom Deck): Power Subsystem</h4>
-      <p>Houses the <strong>MT3608 5V Step-Up Boost Converter (45 × 23 × 15 mm)</strong>, <strong>TP4056 Charger (30 × 18 × 3 mm)</strong> with USB-C connector facing the side cutout, and securely beds the <strong>37 × 25 × 5 mm LiPo battery</strong>.</p>
+    
+    <div style="display:flex; flex-direction:column; gap:8px; font-size:0.74rem;">
+      <div style="background:#111b2e; padding:8px 10px; border-radius:8px; border-left:3px solid #38bdf8;">
+        <b style="color:#e2e8f0;">Layer 1 (Top Deck):</b> Upper INMP441 MEMS Mic, MicroSD Reader (SPI), White Latching Power Switch, Round Voice Push Button, 5mm Blue LED.
+      </div>
+      <div style="background:#111b2e; padding:8px 10px; border-radius:8px; border-left:3px solid #60a5fa;">
+        <b style="color:#e2e8f0;">Layer 2 (Middle Deck):</b> ESP32-S3 DevKit WROOM-1 (70×39×10mm) with dual 22-pin female socket headers for modular swapability.
+      </div>
+      <div style="background:#111b2e; padding:8px 10px; border-radius:8px; border-left:3px solid #f59e0b;">
+        <b style="color:#e2e8f0;">Layer 3 (Power Deck):</b> 800mAh 3.7V Li-Po Battery, TP4056 USB-C 1A Charger, MT3608 5V Step-Up Boost Converter.
+      </div>
     </div>
   </div>
 
-  <div class="bottom-hint">
-    Left Click + Drag to Rotate • Right Click to Pan • Scroll to Zoom • Click White Button to Toggle Power
+  <!-- BOTTOM STATUS PILL -->
+  <div class="bottom-pill">
+    <div class="status-dot"></div>
+    <span>Left Click + Drag: Rotate 3D</span>
+    <span>•</span>
+    <span>Scroll: Zoom</span>
+    <span>•</span>
+    <span>Right Click: Pan</span>
   </div>
 
+  <!-- THREE.JS 3D SCENE SCRIPT -->
   <script>
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x090d16);
+    scene.background = new THREE.Color(0x070b14);
+    scene.fog = new THREE.FogExp2(0x070b14, 0.0018);
 
-    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 2000);
-    camera.position.set(125, 90, 175);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.set(135, 105, 185);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -508,13 +701,14 @@
     controls.dampingFactor = 0.05;
     controls.target.set(0, 0, 0);
 
-    const amb = new THREE.AmbientLight(0xffffff, 0.75);
+    // Lights
+    const amb = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(amb);
-    const dir1 = new THREE.DirectionalLight(0xffffff, 0.9);
+    const dir1 = new THREE.DirectionalLight(0xffffff, 0.95);
     dir1.position.set(120, 150, 100);
     dir1.castShadow = true;
     scene.add(dir1);
-    const dir2 = new THREE.DirectionalLight(0x38bdf8, 0.4);
+    const dir2 = new THREE.DirectionalLight(0x38bdf8, 0.45);
     dir2.position.set(-120, -100, -100);
     scene.add(dir2);
 
@@ -524,6 +718,7 @@
       return c;
     }
 
+    // High Quality Textures
     function createESP32Texture() {
       const canvas = makeCanvas(512, 1024);
       const ctx = canvas.getContext('2d');
@@ -670,6 +865,7 @@
       return new THREE.CanvasTexture(canvas);
     }
 
+    // Materials
     const matESP32 = new THREE.MeshStandardMaterial({ map: createESP32Texture(), roughness: 0.35 });
     const matStarboard = new THREE.MeshStandardMaterial({ map: createStarboardTexture(), roughness: 0.45 });
     const matSD = new THREE.MeshStandardMaterial({ map: createSDTexture(), roughness: 0.4 });
@@ -677,14 +873,32 @@
     const matTP = new THREE.MeshStandardMaterial({ map: createTPTexture(), roughness: 0.4 });
     const matBat = new THREE.MeshStandardMaterial({ map: createBatteryTexture(), roughness: 0.3, metalness: 0.4 });
     const matMic = new THREE.MeshStandardMaterial({ map: createMicTexture(), roughness: 0.4 });
-    const matCardboard = new THREE.MeshStandardMaterial({ map: createCardboardTexture(), roughness: 0.85 });
-    const matCardboardEdge = new THREE.MeshStandardMaterial({ color: 0x9b7a58, roughness: 0.9 });
+    
+    // Cardboard Solid and Glass Materials for Earlier View vs X-Ray View
+    const matCardboardSolid = new THREE.MeshStandardMaterial({ map: createCardboardTexture(), roughness: 0.85 });
+    const matCardboardGlass = new THREE.MeshStandardMaterial({
+      map: createCardboardTexture(),
+      roughness: 0.4,
+      transparent: true,
+      opacity: 0.28,
+      depthWrite: false
+    });
+    const matCardboardEdgeSolid = new THREE.MeshStandardMaterial({ color: 0x9b7a58, roughness: 0.9 });
+    const matCardboardEdgeGlass = new THREE.MeshStandardMaterial({
+      color: 0x9b7a58,
+      roughness: 0.4,
+      transparent: true,
+      opacity: 0.28,
+      depthWrite: false
+    });
+
     const matMetal = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.25, metalness: 0.9 });
     const matGold = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3, metalness: 0.85 });
     const matButton = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.4, metalness: 0.2 });
-    const matWhiteSwitch = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.35, metalness: 0.05 }); // White nylon
+    const matWhiteSwitch = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35, metalness: 0.05 });
     const matLED = new THREE.MeshStandardMaterial({ color: 0x00e5ff, roughness: 0.1, emissive: 0x00aacc, emissiveIntensity: 0.8 });
     const matBrassStandoff = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.3, metalness: 0.8 });
+    const matDimLine = new THREE.LineBasicMaterial({ color: 0xef4444, linewidth: 2 });
 
     function makeOctagon(w, h, c) {
       const s = new THREE.Shape();
@@ -704,203 +918,206 @@
     const rootAssembly = new THREE.Group();
     scene.add(rootAssembly);
 
-    const layerGroups = {
-      cardboard_front: new THREE.Group(),
-      sb1: new THREE.Group(),
-      sb2: new THREE.Group(),
-      sb3: new THREE.Group(),
-      cardboard_back: new THREE.Group()
+    // GROUPS MATCHING FREECAD PHOTO EXACTLY (8 NODES)
+    const treeGroups = {
+      '01': new THREE.Group(), // _01_Front_Cardboard_Cover
+      '02': new THREE.Group(), // _02_Front_Controls_Switches_LED
+      '03': new THREE.Group(), // _03_Starboard_1_Upper_Mic_and_SD_Card
+      '04': new THREE.Group(), // _04_Starboard_2_ESP32_DevKit
+      '05': new THREE.Group(), // _05_Starboard_3_Power_and_Battery
+      '06': new THREE.Group(), // _06_Perimeter_Cardboard_Walls
+      '07': new THREE.Group(), // _07_Back_Cover_and_Lanyard
+      '08': new THREE.Group(), // _08_Dimensions_and_Measurements
     };
-    Object.values(layerGroups).forEach(g => rootAssembly.add(g));
+    Object.values(treeGroups).forEach(g => rootAssembly.add(g));
 
     const PW = 62, PH = 90, PD = 38;
     const SW = 54, SH = 82;
 
     const Z_FRONT_CARD = 17.0;
-    const Z_SB1 = 9.0;    // Deck 1: Upper Mic + SD + Push Button + White Latching Switch + LED
-    const Z_SB2 = -1.0;   // Deck 2: ESP32-S3 DevKit
-    const Z_SB3 = -11.0;  // Deck 3: Booster + Charger + Battery
+    const Z_SB1 = 9.0;
+    const Z_SB2 = -1.0;
+    const Z_SB3 = -11.0;
     const Z_BACK_CARD = -19.0;
 
     // ----------------------------------------------------
-    // 1. FRONT CARDBOARD COVER
+    // NODE 01: FRONT CARDBOARD COVER
     // ----------------------------------------------------
     const fShape = makeOctagon(PW, PH, 8);
-    // 1. Blue LED hole (upper center)
+    // 4 Cutout Holes
     const hLED = new THREE.Path(); hLED.absarc(0, 22, 2.8, 0, Math.PI*2, true); fShape.holes.push(hLED);
-    // 2. Voice Push Button hole (mid center)
     const hBTN = new THREE.Path(); hBTN.absarc(0, -2, 3.8, 0, Math.PI*2, true); fShape.holes.push(hBTN);
-    // 3. White Latching Power Switch round collar opening (lower center)
-    const hSW = new THREE.Path(); hSW.absarc(0, -23, 3.0, 0, Math.PI*2, true); fShape.holes.push(hSW);
-    // 4. Upper Mic Sound Pinhole (top left)
+    const hSW  = new THREE.Path(); hSW.absarc(0, -23, 3.0, 0, Math.PI*2, true); fShape.holes.push(hSW);
     const hMIC = new THREE.Path(); hMIC.absarc(-16, 26, 1.8, 0, Math.PI*2, true); fShape.holes.push(hMIC);
 
-    const fMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(fShape, { depth: 2, bevelEnabled: false }), matCardboard);
+    const fMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(fShape, { depth: 2, bevelEnabled: false }), matCardboardSolid);
     fMesh.position.z = Z_FRONT_CARD;
-    layerGroups.cardboard_front.add(fMesh);
+    treeGroups['01'].add(fMesh);
 
-    // Front Controls
-    // 1. Blue LED
+    // ----------------------------------------------------
+    // NODE 02: FRONT CONTROLS, SWITCHES & LED
+    // ----------------------------------------------------
+    // 1. Blue LED Dome
     const ledMesh = new THREE.Mesh(new THREE.SphereGeometry(2.5, 24, 16, 0, Math.PI*2, 0, Math.PI/2), matLED);
     ledMesh.rotation.x = -Math.PI/2;
     ledMesh.position.set(0, 22, Z_FRONT_CARD + 2.5);
-    layerGroups.cardboard_front.add(ledMesh);
+    treeGroups['02'].add(ledMesh);
 
-    // 2. Round Voice Push Button Cap
+    // 2. Round Voice Push Button
     const btnMesh = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 3.0, 32), matButton);
     btnMesh.rotation.x = Math.PI/2;
     btnMesh.position.set(0, -2, Z_FRONT_CARD + 2.5);
-    layerGroups.cardboard_front.add(btnMesh);
+    treeGroups['02'].add(btnMesh);
 
-    // 3. White Latching Push-Push Power Button (Plunger)
-    // Matches the photo: round white plunger protruding through the front collar
+    // 3. White Latching Push-Push Power Switch Plunger (Matching user's photo!)
     const whitePlungerGeom = new THREE.CylinderGeometry(1.9, 1.9, 4.0, 24);
     const whitePlungerMesh = new THREE.Mesh(whitePlungerGeom, matWhiteSwitch);
     whitePlungerMesh.rotation.x = Math.PI/2;
-    whitePlungerMesh.position.set(0, -23, Z_FRONT_CARD + 1.6); // Latched ON position
-    layerGroups.cardboard_front.add(whitePlungerMesh);
+    whitePlungerMesh.position.set(0, -23, Z_FRONT_CARD + 1.6);
+    treeGroups['02'].add(whitePlungerMesh);
 
-    // Mic Bezel Ring
+    // 4. Mic Bezel Gold Ring
     const micRing = new THREE.Mesh(new THREE.RingGeometry(1.8, 2.8, 24), new THREE.MeshBasicMaterial({ color: 0xd97706, side: THREE.DoubleSide }));
     micRing.position.set(-16, 26, Z_FRONT_CARD + 2.05);
-    layerGroups.cardboard_front.add(micRing);
+    treeGroups['02'].add(micRing);
 
     // ----------------------------------------------------
-    // 2. STARBOARD 1 (FRONT DECK): CONTROLS + UPPER MIC + SD
+    // NODE 03: STARBOARD 1 (UPPER MIC + SD CARD)
     // ----------------------------------------------------
     const sb1Shape = makeOctagon(SW, SH, 6);
     const sb1Mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(sb1Shape, { depth: 1.6, bevelEnabled: false }), matStarboard);
     sb1Mesh.position.z = Z_SB1;
-    layerGroups.sb1.add(sb1Mesh);
+    treeGroups['03'].add(sb1Mesh);
 
     // INMP441 MEMS Microphone on UPPER SIDE (14 x 11 x 3.5 mm)
     const micMesh = new THREE.Mesh(new THREE.BoxGeometry(11, 14, 3.5), matMic);
     micMesh.position.set(-16, 26, Z_SB1 + 2.4);
-    layerGroups.sb1.add(micMesh);
+    treeGroups['03'].add(micMesh);
 
     // MicroSD Card Adapter (50 x 25 x 10 mm)
     const sdMesh = new THREE.Mesh(new THREE.BoxGeometry(25, 50, 1.6), matSD);
     sdMesh.position.set(11, -8, Z_SB1 + 2.4);
-    layerGroups.sb1.add(sdMesh);
+    treeGroups['03'].add(sdMesh);
 
     const sdSlot = new THREE.Mesh(new THREE.BoxGeometry(16, 18, 2.8), matMetal);
     sdSlot.position.set(16, -18, Z_SB1 + 4.6);
-    layerGroups.sb1.add(sdSlot);
+    treeGroups['03'].add(sdSlot);
 
     const cardMesh = new THREE.Mesh(new THREE.BoxGeometry(11, 14, 1.0), matButton);
     cardMesh.position.set(16, -26, Z_SB1 + 4.6);
-    layerGroups.sb1.add(cardMesh);
+    treeGroups['03'].add(cardMesh);
 
-    // Voice Push button tactile switch body
+    // Voice Push button switch body
     const btnBase = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 4), matButton);
     btnBase.position.set(0, -2, Z_SB1 + 2.8);
-    layerGroups.sb1.add(btnBase);
+    treeGroups['03'].add(btnBase);
 
-    // White Latching Push-Push Power Switch Body & Tabs (Matching Photo!)
-    // Rectangular base body
+    // White Latching Switch base body & stepped collar (matching photo!)
     const swBaseMesh = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 3.2), matWhiteSwitch);
     swBaseMesh.position.set(0, -23, Z_SB1 + 2.4);
-    layerGroups.sb1.add(swBaseMesh);
+    treeGroups['03'].add(swBaseMesh);
 
-    // Stepped cylindrical collar / boss
     const swCollarGeom = new THREE.CylinderGeometry(2.8, 2.8, 2.5, 24);
     const swCollarMesh = new THREE.Mesh(swCollarGeom, matWhiteSwitch);
     swCollarMesh.rotation.x = Math.PI/2;
     swCollarMesh.position.set(0, -23, Z_SB1 + 5.0);
-    layerGroups.sb1.add(swCollarMesh);
+    treeGroups['03'].add(swCollarMesh);
 
-    // Silver side solder tabs / wings extending left and right (matching photo)
+    // Side solder tabs
     const tabGeom = new THREE.BoxGeometry(3.5, 1.2, 0.4);
     const tabLeft = new THREE.Mesh(tabGeom, matMetal);
     tabLeft.position.set(-5.75, -23, Z_SB1 + 1.8);
     const tabRight = new THREE.Mesh(tabGeom, matMetal);
     tabRight.position.set(5.75, -23, Z_SB1 + 1.8);
-    layerGroups.sb1.add(tabLeft); layerGroups.sb1.add(tabRight);
+    treeGroups['03'].add(tabLeft); treeGroups['03'].add(tabRight);
 
-    // 4 Corner Brass Standoffs (Connecting SB1 to SB2)
+    // 4 Corner Brass Standoffs (SB1 to SB2)
     const standoffGeom = new THREE.CylinderGeometry(1.5, 1.5, 8.4, 16);
     [[-22, -34], [22, -34], [-22, 34], [22, 34]].forEach(([sx, sy]) => {
       const so = new THREE.Mesh(standoffGeom, matBrassStandoff);
       so.rotation.x = Math.PI/2;
       so.position.set(sx, sy, (Z_SB1 + Z_SB2) / 2);
-      layerGroups.sb1.add(so);
+      treeGroups['03'].add(so);
     });
 
     // ----------------------------------------------------
-    // 3. STARBOARD 2 (MIDDLE DECK): ESP32-S3 DEVKIT (70 x 39 x 10 mm)
+    // NODE 04: STARBOARD 2 (ESP32-S3 DEVKIT)
     // ----------------------------------------------------
     const sb2Shape = makeOctagon(SW, SH, 6);
     const sb2Mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(sb2Shape, { depth: 1.6, bevelEnabled: false }), matStarboard);
     sb2Mesh.position.z = Z_SB2;
-    layerGroups.sb2.add(sb2Mesh);
+    treeGroups['04'].add(sb2Mesh);
 
     const espMesh = new THREE.Mesh(new THREE.BoxGeometry(39, 70, 1.6), matESP32);
     espMesh.position.set(0, 0, Z_SB2 + 2.4);
-    layerGroups.sb2.add(espMesh);
+    treeGroups['04'].add(espMesh);
 
     const rfMesh = new THREE.Mesh(new THREE.BoxGeometry(18, 25, 2.5), matMetal);
     rfMesh.position.set(0, 12, Z_SB2 + 4.4);
-    layerGroups.sb2.add(rfMesh);
+    treeGroups['04'].add(rfMesh);
 
     const usbMesh = new THREE.Mesh(new THREE.BoxGeometry(8, 7, 3.2), matMetal);
     usbMesh.position.set(0, 34, Z_SB2 + 4.5);
-    layerGroups.sb2.add(usbMesh);
+    treeGroups['04'].add(usbMesh);
 
     const hdr1 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 62, 7.0), matGold);
     hdr1.position.set(-18, 0, Z_SB2 - 2.5);
     const hdr2 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 62, 7.0), matGold);
     hdr2.position.set(18, 0, Z_SB2 - 2.5);
-    layerGroups.sb2.add(hdr1); layerGroups.sb2.add(hdr2);
+    treeGroups['04'].add(hdr1); treeGroups['04'].add(hdr2);
 
-    const standoff2Geom = new THREE.CylinderGeometry(1.5, 1.5, 8.4, 16);
+    // Standoffs SB2 to SB3
     [[-22, -34], [22, -34], [-22, 34], [22, 34]].forEach(([sx, sy]) => {
-      const so = new THREE.Mesh(standoff2Geom, matBrassStandoff);
+      const so = new THREE.Mesh(standoffGeom, matBrassStandoff);
       so.rotation.x = Math.PI/2;
       so.position.set(sx, sy, (Z_SB2 + Z_SB3) / 2);
-      layerGroups.sb2.add(so);
+      treeGroups['04'].add(so);
     });
 
     // ----------------------------------------------------
-    // 4. STARBOARD 3 (BOTTOM DECK): POWER & BATTERY
+    // NODE 05: STARBOARD 3 (POWER & BATTERY)
     // ----------------------------------------------------
     const sb3Shape = makeOctagon(SW, SH, 6);
     const sb3Mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(sb3Shape, { depth: 1.6, bevelEnabled: false }), matStarboard);
     sb3Mesh.position.z = Z_SB3;
-    layerGroups.sb3.add(sb3Mesh);
+    treeGroups['05'].add(sb3Mesh);
 
+    // MT3608 Boost Converter (45 x 23 x 15 mm)
     const bstMesh = new THREE.Mesh(new THREE.BoxGeometry(23, 45, 1.6), matBooster);
     bstMesh.position.set(-12, 12, Z_SB3 + 2.4);
-    layerGroups.sb3.add(bstMesh);
+    treeGroups['05'].add(bstMesh);
 
     const indMesh = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 5.5, 6.0, 20), matMetal);
     indMesh.rotation.x = Math.PI/2;
     indMesh.position.set(-14, 12, Z_SB3 + 6.0);
-    layerGroups.sb3.add(indMesh);
+    treeGroups['05'].add(indMesh);
 
     const potMesh = new THREE.Mesh(new THREE.BoxGeometry(5, 9, 7.0), new THREE.MeshStandardMaterial({ color: 0x2563eb }));
     potMesh.position.set(-6, 20, Z_SB3 + 6.5);
-    layerGroups.sb3.add(potMesh);
+    treeGroups['05'].add(potMesh);
 
+    // TP4056 Charger (30 x 18 x 3 mm)
     const tpMesh = new THREE.Mesh(new THREE.BoxGeometry(18, 30, 1.6), matTP);
     tpMesh.position.set(13, 16, Z_SB3 + 2.4);
-    layerGroups.sb3.add(tpMesh);
+    treeGroups['05'].add(tpMesh);
 
     const tpUsb = new THREE.Mesh(new THREE.BoxGeometry(6, 9, 3.2), matMetal);
     tpUsb.position.set(22, 16, Z_SB3 + 2.8);
-    layerGroups.sb3.add(tpUsb);
+    treeGroups['05'].add(tpUsb);
 
+    // 800mAh LiPo Battery (37 x 25 x 5 mm)
     const batMesh = new THREE.Mesh(new THREE.BoxGeometry(25, 37, 5.0), matBat);
     batMesh.position.set(0, -18, Z_SB3 + 4.1);
-    layerGroups.sb3.add(batMesh);
+    treeGroups['05'].add(batMesh);
 
     const wireRed = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 20), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
     wireRed.position.set(-8, -4, Z_SB3 + 5);
     const wireBlk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 20), new THREE.MeshBasicMaterial({ color: 0x111827 }));
     wireBlk.position.set(-5, -4, Z_SB3 + 5);
-    layerGroups.sb3.add(wireRed); layerGroups.sb3.add(wireBlk);
+    treeGroups['05'].add(wireRed); treeGroups['05'].add(wireBlk);
 
     // ----------------------------------------------------
-    // 5. ENCLOSURE WALLS & BACK COVER
+    // NODE 06: PERIMETER CARDBOARD WALLS
     // ----------------------------------------------------
     const wOuter = makeOctagon(PW, PH, 8);
     const wInner = new THREE.Path();
@@ -916,26 +1133,30 @@
     wInner.closePath();
     wOuter.holes.push(wInner);
 
-    const wallsMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(wOuter, { depth: PD - 4, bevelEnabled: false }), matCardboardEdge);
+    const wallsMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(wOuter, { depth: PD - 4, bevelEnabled: false }), matCardboardEdgeSolid);
     wallsMesh.position.z = -PD/2 + 2;
-    layerGroups.cardboard_back.add(wallsMesh);
+    treeGroups['06'].add(wallsMesh);
 
+    // Wall Port Cutouts
     const cutUSB = new THREE.Mesh(new THREE.BoxGeometry(4, 11, 6), new THREE.MeshBasicMaterial({ color: 0x0f172a }));
     cutUSB.position.set(PW/2 - 1, 16, Z_SB3 + 2.8);
-    layerGroups.cardboard_back.add(cutUSB);
+    treeGroups['06'].add(cutUSB);
 
     const cutSD = new THREE.Mesh(new THREE.BoxGeometry(4, 14, 6), new THREE.MeshBasicMaterial({ color: 0x0f172a }));
     cutSD.position.set(PW/2 - 1, -18, Z_SB1 + 4.6);
-    layerGroups.cardboard_back.add(cutSD);
+    treeGroups['06'].add(cutSD);
 
+    // ----------------------------------------------------
+    // NODE 07: BACK COVER & LANYARD
+    // ----------------------------------------------------
     const bShape = makeOctagon(PW, PH, 8);
-    const bMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(bShape, { depth: 2, bevelEnabled: false }), matCardboard);
+    const bMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(bShape, { depth: 2, bevelEnabled: false }), matCardboardSolid);
     bMesh.position.z = Z_BACK_CARD;
-    layerGroups.cardboard_back.add(bMesh);
+    treeGroups['07'].add(bMesh);
 
     const bracket = new THREE.Mesh(new THREE.BoxGeometry(16, 6, 8), matButton);
     bracket.position.set(0, PH/2 - 2, 0);
-    layerGroups.cardboard_back.add(bracket);
+    treeGroups['07'].add(bracket);
 
     const cordCurveL = new THREE.QuadraticBezierCurve3(
       new THREE.Vector3(-4, PH/2, 0),
@@ -943,7 +1164,7 @@
       new THREE.Vector3(-22, PH/2 + 55, 0)
     );
     const cordL = new THREE.Mesh(new THREE.TubeGeometry(cordCurveL, 20, 1.6, 8, false), matButton);
-    layerGroups.cardboard_back.add(cordL);
+    treeGroups['07'].add(cordL);
 
     const cordCurveR = new THREE.QuadraticBezierCurve3(
       new THREE.Vector3(4, PH/2, 0),
@@ -951,42 +1172,315 @@
       new THREE.Vector3(22, PH/2 + 55, 0)
     );
     const cordR = new THREE.Mesh(new THREE.TubeGeometry(cordCurveR, 20, 1.6, 8, false), matButton);
-    layerGroups.cardboard_back.add(cordR);
+    treeGroups['07'].add(cordR);
 
-    // --- EXPLODED ANIMATION SYSTEM ---
+    // ----------------------------------------------------
+    // NODE 08: DIMENSIONS & MEASUREMENTS
+    // ----------------------------------------------------
+    function createDimLine(p1, p2) {
+      const geom = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+      return new THREE.Line(geom, matDimLine);
+    }
+    // Width 62mm dimension line
+    treeGroups['08'].add(createDimLine(new THREE.Vector3(-PW/2, -PH/2 - 8, 0), new THREE.Vector3(PW/2, -PH/2 - 8, 0)));
+    // Height 90mm dimension line
+    treeGroups['08'].add(createDimLine(new THREE.Vector3(-PW/2 - 8, -PH/2, 0), new THREE.Vector3(-PW/2 - 8, PH/2, 0)));
+    // Depth 38mm dimension line
+    treeGroups['08'].add(createDimLine(new THREE.Vector3(PW/2 + 8, PH/2, -PD/2), new THREE.Vector3(PW/2 + 8, PH/2, PD/2)));
+    // Corner ticks
+    treeGroups['08'].add(createDimLine(new THREE.Vector3(-PW/2, -PH/2 - 12, 0), new THREE.Vector3(-PW/2, -PH/2 - 4, 0)));
+    treeGroups['08'].add(createDimLine(new THREE.Vector3(PW/2, -PH/2 - 12, 0), new THREE.Vector3(PW/2, -PH/2 - 4, 0)));
+    treeGroups['08'].add(createDimLine(new THREE.Vector3(-PW/2 - 12, -PH/2, 0), new THREE.Vector3(-PW/2 - 4, -PH/2, 0)));
+    treeGroups['08'].add(createDimLine(new THREE.Vector3(-PW/2 - 12, PH/2, 0), new THREE.Vector3(-PW/2 - 4, PH/2, 0)));
+
+    // Vertical Exploded Stack Guide Line
+    const stackGuideGeom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, -80),
+      new THREE.Vector3(0, 0, 100)
+    ]);
+    const stackGuideLine = new THREE.Line(stackGuideGeom, new THREE.LineDashedMaterial({ color: 0x38bdf8, dashSize: 4, gapSize: 3 }));
+    stackGuideLine.computeLineDistances();
+    stackGuideLine.visible = false;
+    scene.add(stackGuideLine);
+
+    // EXPLODED OFFSETS PER NODE
     const explodeOffsets = {
-      cardboard_front: +75,
-      sb1:             +45,
-      sb2:             +12,
-      sb3:             -20,
-      cardboard_back:  -60
+      '01': +85, // Front cardboard cover
+      '02': +75, // Controls
+      '03': +45, // SB1
+      '04': +10, // SB2 ESP32
+      '05': -25, // SB3 Power
+      '06': -45, // Walls
+      '07': -75, // Back cover
+      '08': 0    // Dimensions
     };
 
+    // --- VIEW MODE SYSTEM (EARLIER SOLID vs X-RAY vs TREE vs EXPLODED) ---
+    let currentViewMode = 'tree';
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      
+      document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById('btn-choice-' + mode);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const explodeRange = document.getElementById('explode-range');
+      const explodeDisplay = document.getElementById('explode-display');
+
+      if (mode === 'earlier') {
+        // Earlier View: Solid Opaque Enclosure, Assembly closed
+        fMesh.material = matCardboardSolid;
+        wallsMesh.material = matCardboardEdgeSolid;
+        bMesh.material = matCardboardSolid;
+        explodeRange.value = 0;
+        explodeDisplay.textContent = '0 mm';
+        stackGuideLine.visible = false;
+        setExplosion(0);
+        toggleAllLayers(true);
+        updateDetailCard('earlier');
+      } else if (mode === 'xray') {
+        // Transparent Internal View: Translucent Shell, Inside boards visible
+        fMesh.material = matCardboardGlass;
+        wallsMesh.material = matCardboardEdgeGlass;
+        bMesh.material = matCardboardGlass;
+        explodeRange.value = 0;
+        explodeDisplay.textContent = '0 mm';
+        stackGuideLine.visible = false;
+        setExplosion(0);
+        toggleAllLayers(true);
+        updateDetailCard('xray');
+      } else if (mode === 'tree') {
+        // CAD Model Tree View (As in photo)
+        fMesh.material = matCardboardGlass;
+        wallsMesh.material = matCardboardEdgeGlass;
+        bMesh.material = matCardboardGlass;
+        explodeRange.value = 0;
+        explodeDisplay.textContent = '0 mm';
+        stackGuideLine.visible = false;
+        setExplosion(0);
+        updateDetailCard('tree');
+      } else if (mode === 'exploded') {
+        // Exploded View
+        fMesh.material = matCardboardSolid;
+        wallsMesh.material = matCardboardEdgeSolid;
+        bMesh.material = matCardboardSolid;
+        explodeRange.value = 75;
+        explodeDisplay.textContent = '75 mm';
+        stackGuideLine.visible = true;
+        setExplosion(0.75);
+        toggleAllLayers(true);
+        updateDetailCard('exploded');
+      }
+    }
+
+    function setExplosion(factor) {
+      for (const [key, grp] of Object.entries(treeGroups)) {
+        grp.position.z = explodeOffsets[key] * factor;
+      }
+    }
+
+    // Explode Slider Listener
     const explodeRange = document.getElementById('explode-range');
     const explodeDisplay = document.getElementById('explode-display');
 
     explodeRange.addEventListener('input', (e) => {
       const f = parseFloat(e.target.value) / 100.0;
-      explodeDisplay.textContent = Math.round(f * 75) + ' mm';
-      for (const [key, grp] of Object.entries(layerGroups)) {
-        grp.position.z = explodeOffsets[key] * f;
-      }
+      explodeDisplay.textContent = Math.round(f * 100) + ' mm';
+      setExplosion(f);
+      stackGuideLine.visible = (f > 0.05);
     });
 
-    function focusLayer(name) {
-      document.querySelectorAll('.btn-layer').forEach(b => b.classList.remove('active'));
-      event.currentTarget.classList.add('active');
+    // --- FREECAD TREE INTERACTION ---
+    const layerVisibility = {
+      '01': true,
+      '02': true,
+      '03': true,
+      '04': true,
+      '05': true,
+      '06': true,
+      '07': true,
+      '08': true
+    };
 
-      if (name === 'all') {
-        Object.values(layerGroups).forEach(g => g.visible = true);
+    function toggleLayer(nodeId, event) {
+      if (event) event.stopPropagation();
+      layerVisibility[nodeId] = !layerVisibility[nodeId];
+      treeGroups[nodeId].visible = layerVisibility[nodeId];
+
+      const eyeEl = document.getElementById('eye-' + nodeId);
+      if (layerVisibility[nodeId]) {
+        eyeEl.textContent = '👁️';
+        eyeEl.classList.remove('hidden-eye');
       } else {
-        Object.keys(layerGroups).forEach(k => {
-          layerGroups[k].visible = (k === name);
-        });
+        eyeEl.textContent = '🚫';
+        eyeEl.classList.add('hidden-eye');
       }
     }
 
-    // --- INTERACTIVE DUAL BUTTON LOGIC ---
+    function toggleAllLayers(visibleState) {
+      Object.keys(layerVisibility).forEach(k => {
+        layerVisibility[k] = visibleState;
+        treeGroups[k].visible = visibleState;
+        const eyeEl = document.getElementById('eye-' + k);
+        if (visibleState) {
+          eyeEl.textContent = '👁️';
+          eyeEl.classList.remove('hidden-eye');
+        } else {
+          eyeEl.textContent = '🚫';
+          eyeEl.classList.add('hidden-eye');
+        }
+      });
+    }
+
+    const nodeMetadata = {
+      '01': {
+        title: "_01_Front_Cardboard_Cover",
+        icon: "📄",
+        desc: "Precision laser/knife cut 2.0 mm brown corrugated/grey cardboard faceplate with 4 custom cutouts for sound pinhole, blue LED, round voice trigger button, and white latching power switch collar.",
+        table: [
+          ["Outer Dimensions", "62 × 90 × 2.0 mm (Octagonal)"],
+          ["Corner 45° Chamfers", "8.0 mm on all 4 corners"],
+          ["Upper Mic Pinhole", "Ø 3.6 mm @ X:-16mm, Y:+26mm"],
+          ["Blue LED Aperture", "Ø 5.6 mm @ X:0mm, Y:+22mm"],
+          ["Voice Button Hole", "Ø 7.6 mm @ X:0mm, Y:-2mm"],
+          ["Power Switch Hole", "Ø 6.0 mm @ X:0mm, Y:-23mm"]
+        ]
+      },
+      '02': {
+        title: "_02_Front_Controls_Switches_LED",
+        icon: "🔘",
+        desc: "Front user interface controls: Self-locking white latching push-push power switch (matching physical photo), round tactile voice query button (Ø 7 mm), and 5 mm diffused blue activity LED.",
+        table: [
+          ["White Power Switch", "Latching push-push, 8×8mm base, Ø5.6mm collar"],
+          ["Voice Push Button", "Momentary tactile switch, Ø7mm round actuation cap"],
+          ["Blue Status LED", "5mm diffused dome, active pulsing record feedback"],
+          ["Mic Sound Bezel", "Machined gold acoustic surround ring (Ø3.6mm)"]
+        ]
+      },
+      '03': {
+        title: "_03_Starboard_1_Upper_Mic_and_SD_Card",
+        icon: "🎙️",
+        desc: "Top internal perforated Starboard deck (54×82×1.6mm) positioned right behind front cover. Houses the upper INMP441 I2S MEMS microphone, full MicroSD card module facing right-side wall cutout, and switch mountings.",
+        table: [
+          ["Board Dimensions", "54 × 82 × 1.6 mm FR-4 Starboard"],
+          ["INMP441 Microphone", "14 × 11 × 3.5 mm (Facing upper acoustic hole)"],
+          ["MicroSD Module", "50 × 25 × 10 mm (Facing right wall slot)"],
+          ["Z-Axis Position", "Z = +9.0 mm from pendant center"],
+          ["Inter-Deck Standoffs", "4× M2 Brass Standoffs (8.4mm to Deck 2)"]
+        ]
+      },
+      '04': {
+        title: "_04_Starboard_2_ESP32_DevKit",
+        icon: "⚡",
+        desc: "Central processing deck. Holds the ESP32-S3 DevKit N8R8 high-performance dual-core MCU (70×39×10mm) inserted into dual female socket headers for solderless swapability.",
+        table: [
+          ["Microcontroller", "ESP32-S3-WROOM-1 DevKit (N8R8)"],
+          ["Board Dimensions", "70 × 39 × 10 mm (Centered on Starboard)"],
+          ["Pin Header Rows", "Dual 22-pin gold female socket strips (18mm apart)"],
+          ["Z-Axis Position", "Z = -1.0 mm (Central spine)"],
+          ["Processing Specs", "Dual 240MHz Xtensa LX7, 8MB PSRAM, 8MB Flash"]
+        ]
+      },
+      '05': {
+        title: "_05_Starboard_3_Power_and_Battery",
+        icon: "🔋",
+        desc: "Bottom power distribution deck. Accommodates the rechargeable 800mAh 3.7V Li-Po battery, TP4056 1A USB-C charging module with port extending out the right wall, and MT3608 5V step-up booster.",
+        table: [
+          ["Rechargeable Battery", "800mAh 3.7V Li-Po 602535 (37×25×5mm)"],
+          ["TP4056 Charger", "30 × 18 × 3 mm (USB-C port at right wall)"],
+          ["MT3608 5V Booster", "45 × 23 × 15 mm (Trimpot tuned to 5.05V)"],
+          ["Z-Axis Position", "Z = -11.0 mm (Bottom deck)"]
+        ]
+      },
+      '06': {
+        title: "_06_Perimeter_Cardboard_Walls",
+        icon: "🧱",
+        desc: "Cardboard side perimeter ring (34 mm depth, 2 mm wall thickness) forming the structural sides. Features dual cutouts on the right face: upper MicroSD slot and lower USB-C charging port.",
+        table: [
+          ["Outer Frame Size", "62 × 90 × 34 mm depth"],
+          ["Wall Thickness", "2.0 mm layered cardboard strip"],
+          ["MicroSD Port Cutout", "14 × 6 mm @ upper right edge"],
+          ["USB-C Port Cutout", "11 × 6 mm @ lower right edge"]
+        ]
+      },
+      '07': {
+        title: "_07_Back_Cover_and_Lanyard",
+        icon: "📿",
+        desc: "Rear 2.0 mm cardboard plate with top lanyard attachment bracket and woven neck cord loops for comfortable hands-free wearable operation.",
+        table: [
+          ["Rear Plate Size", "62 × 90 × 2.0 mm (Octagonal)"],
+          ["Lanyard Bracket", "Reinforced 16×6×8mm nylon/cardboard block"],
+          ["Neck Lanyard Cord", "Braided paracord loop (Ø3.2mm)"]
+        ]
+      },
+      '08': {
+        title: "_08_Dimensions_and_Measurements",
+        icon: "📐",
+        desc: "Engineering 3D measurement datum lines and bounding box coordinates for FreeCAD fabrication and assembly validation.",
+        table: [
+          ["Width (X-Axis)", "62.0 mm"],
+          ["Height (Y-Axis)", "90.0 mm"],
+          ["Depth (Z-Axis)", "38.0 mm"],
+          ["Internal Volume", "148 cm³ (Accommodates 3 decks)"]
+        ]
+      }
+    };
+
+    function selectNode(nodeId) {
+      document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('selected'));
+      const nodeEl = document.getElementById('node-' + nodeId);
+      if (nodeEl) nodeEl.classList.add('selected');
+
+      const info = nodeMetadata[nodeId];
+      if (!info) return;
+
+      document.getElementById('detail-title-icon').textContent = info.icon;
+      document.getElementById('detail-title').textContent = info.title;
+      document.getElementById('card-heading').textContent = info.title;
+      document.getElementById('card-desc').textContent = info.desc;
+
+      const tableEl = document.getElementById('card-table');
+      tableEl.innerHTML = '';
+      info.table.forEach(([k, v]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<th>${k}</th><td class="val-dim">${v}</td>`;
+        tableEl.appendChild(tr);
+      });
+    }
+
+    function updateDetailCard(mode) {
+      if (mode === 'earlier') {
+        document.getElementById('detail-title-icon').textContent = '📦';
+        document.getElementById('detail-title').textContent = 'Earlier View: Solid Assembled';
+        document.getElementById('card-heading').textContent = 'Fully Assembled Physical Pendant';
+        document.getElementById('card-desc').textContent = 'Earlier solid exterior view with finished cardboard enclosure, front buttons, status LED, and right-side USB-C and MicroSD slots.';
+        document.getElementById('card-table').innerHTML = `
+          <tr><th>Enclosure Exterior</th><td class="val-dim">Solid Opaque Cardboard</td></tr>
+          <tr><th>Dimensions</th><td class="val-dim">62 × 90 × 38 mm</td></tr>
+          <tr><th>Front Buttons</th><td class="val-dim">White Power Switch + Voice Button</td></tr>
+          <tr><th>Right Ports</th><td class="val-dim">MicroSD & USB-C Cutouts</td></tr>
+        `;
+      } else if (mode === 'xray') {
+        document.getElementById('detail-title-icon').textContent = '🔮';
+        document.getElementById('detail-title').textContent = 'Internal X-Ray View';
+        document.getElementById('card-heading').textContent = 'Transparent Enclosure Internal View';
+        document.getElementById('card-desc').textContent = 'Enclosure cardboard shell is set to 72% transparency so you can see all 3 Starboard decks, ESP32-S3, battery, mic, and wiring in their exact spatial positions inside!';
+        document.getElementById('card-table').innerHTML = `
+          <tr><th>Shell Material</th><td class="val-dim">Translucent Cardboard (Glass Mode)</td></tr>
+          <tr><th>Deck 1 (Top)</th><td class="val-dim">Upper Mic + SD Card Module</td></tr>
+          <tr><th>Deck 2 (Mid)</th><td class="val-dim">ESP32-S3 DevKit (70×39mm)</td></tr>
+          <tr><th>Deck 3 (Bottom)</th><td class="val-dim">Battery + Booster + TP4056</td></tr>
+        `;
+      } else if (mode === 'exploded') {
+        document.getElementById('detail-title-icon').textContent = '💥';
+        document.getElementById('detail-title').textContent = 'Exploded 3D Stack View';
+        document.getElementById('card-heading').textContent = 'Layer-by-Layer Exploded Stack';
+        document.getElementById('card-desc').textContent = 'All 8 layers separated vertically along the central axis with a blue dashed alignment guide line.';
+      }
+    }
+
+    // --- HARDWARE SIMULATOR LOGIC ---
     let isPowerOn = true;
     let isRecording = false;
 
@@ -1000,11 +1494,10 @@
       const pushBtn = document.getElementById('push-btn');
 
       if (isPowerOn) {
-        // Latched down (ON)
         clickyBtn.classList.add('latched');
         clickyText.textContent = 'ON';
-        pwrText.innerHTML = '<span style="color:#22c55e; font-weight:700;">State: Latched ON (Power Active)</span>';
-        whitePlungerMesh.position.z = Z_FRONT_CARD + 1.6; // Latched down
+        pwrText.innerHTML = '<span style="color:#22c55e; font-weight:700;">State: Latched ON</span>';
+        whitePlungerMesh.position.z = Z_FRONT_CARD + 1.6;
         ledDot.classList.add('active');
         matLED.emissive.setHex(0x00aacc);
         matLED.emissiveIntensity = 0.8;
@@ -1012,11 +1505,10 @@
         pushBtn.disabled = false;
         pushBtn.style.opacity = '1';
       } else {
-        // Unlatched up (OFF)
         clickyBtn.classList.remove('latched');
         clickyText.textContent = 'OFF';
-        pwrText.innerHTML = '<span style="color:#ef4444; font-weight:700;">State: Popped OFF (Circuit Open)</span>';
-        whitePlungerMesh.position.z = Z_FRONT_CARD + 3.4; // Sprung up
+        pwrText.innerHTML = '<span style="color:#ef4444; font-weight:700;">State: Popped OFF</span>';
+        whitePlungerMesh.position.z = Z_FRONT_CARD + 3.4;
         ledDot.classList.remove('active');
         matLED.emissive.setHex(0x000000);
         matLED.emissiveIntensity = 0.0;
@@ -1031,19 +1523,18 @@
     function triggerPushAction() {
       if (!isPowerOn) return;
       isRecording = !isRecording;
-      const ledDot = document.getElementById('sim-led');
       const recText = document.getElementById('record-status-text');
 
       if (isRecording) {
-        recText.innerHTML = '<span style="color:#00e5ff; font-weight:700;">● RECORDING AUDIO (LED PULSING)</span>';
+        recText.innerHTML = '<span style="color:#00e5ff; font-weight:700;">● RECORDING AUDIO</span>';
         matLED.emissive.setHex(0x00ffff);
         matLED.emissiveIntensity = 3.0;
-        btnMesh.position.z = Z_FRONT_CARD + 1.2; // depressed
+        btnMesh.position.z = Z_FRONT_CARD + 1.2;
       } else {
         recText.textContent = 'Ready for trigger';
         matLED.emissive.setHex(0x00aacc);
         matLED.emissiveIntensity = 0.8;
-        btnMesh.position.z = Z_FRONT_CARD + 2.5; // released
+        btnMesh.position.z = Z_FRONT_CARD + 2.5;
       }
     }
 
@@ -1052,24 +1543,10 @@
       switch (mode) {
         case 'front': camera.position.set(0, 0, 190); controls.target.set(0, 0, 0); break;
         case 'side':  camera.position.set(190, 0, 0); controls.target.set(0, 0, 0); break;
-        case 'back':  camera.position.set(0, 0, -190); controls.target.set(0, 0, 0); break;
         case 'top':   camera.position.set(0, 190, 0.1); controls.target.set(0, 0, 0); break;
-        case 'iso':   camera.position.set(125, 90, 175); controls.target.set(0, 0, 0); break;
+        case 'iso':   camera.position.set(135, 105, 185); controls.target.set(0, 0, 0); break;
       }
       controls.update();
-    }
-
-    function resetAll() {
-      setCam('iso');
-      explodeRange.value = 0;
-      explodeDisplay.textContent = '0 mm';
-      for (const [key, grp] of Object.entries(layerGroups)) {
-        grp.position.z = 0;
-        grp.visible = true;
-      }
-      document.querySelectorAll('.btn-layer').forEach((b, i) => {
-        b.classList.toggle('active', i === 0);
-      });
     }
 
     window.addEventListener('resize', () => {
@@ -1087,6 +1564,10 @@
       renderer.render(scene, camera);
     }
     renderLoop();
+
+    // Default selection
+    selectNode('01');
+    setViewMode('tree');
   </script>
 </body>
 </html>
