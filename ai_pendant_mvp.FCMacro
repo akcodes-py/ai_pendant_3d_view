@@ -1,0 +1,363 @@
+# ============================================================
+# Brain2 AI Pendant - 3-Starboard Stacked Architecture
+# Front Controls:
+# 1. Indicator LED (5mm Blue)
+# 2. Push Button (Round Tactile for Voice / AI trigger)
+# 3. ON/OFF Power Switch (Slide Switch with ON/OFF toggle)
+# 4. Upper-Side INMP441 MEMS Microphone
+# ============================================================
+import FreeCAD
+import Part
+import math
+import os
+
+doc_name = "AI_Pendant_MVP"
+if doc_name in FreeCAD.listDocuments():
+    FreeCAD.closeDocument(doc_name)
+
+doc = FreeCAD.newDocument(doc_name)
+
+# ------------------------------------------------------------
+# 1. PARAMETERS & EXACT HAND-SCALE MEASUREMENTS (mm)
+# ------------------------------------------------------------
+CARDBOARD_T = 2.0
+STARBOARD_T = 1.6
+CHAMFER_C   = 8.0
+
+# Exact user measurements
+ESP32_L = 70.0; ESP32_W = 39.0; ESP32_H = 10.0
+SD_L    = 50.0; SD_W    = 25.0; SD_H    = 10.0
+BAT_L   = 37.0; BAT_W   = 25.0; BAT_H   = 5.0
+TP_L    = 30.0; TP_W    = 18.0; TP_H    = 3.0
+BST_L   = 45.0; BST_W   = 23.0; BST_H   = 15.0
+MIC_L   = 14.0; MIC_W   = 11.0; MIC_H   = 3.5
+
+# Controls
+BUTTON_DIA   = 7.0
+LED_DIA      = 5.0
+SWITCH_L     = 8.5    # ON/OFF Slide switch length
+SWITCH_W     = 4.0    # ON/OFF Slide switch width
+SWITCH_H     = 5.0    # Switch body height
+
+STARBOARD_W = 54.0
+STARBOARD_L = 82.0
+
+PENDANT_W = STARBOARD_W + 2 * CARDBOARD_T + 4.0  # 62 mm
+PENDANT_H = STARBOARD_L + 2 * CARDBOARD_T + 4.0  # 90 mm
+PENDANT_D = 38.0                                  # 38 mm
+
+# Z Stack-up
+Z_BACK_CARD   = 0.0
+Z_STARBOARD_3 = Z_BACK_CARD + CARDBOARD_T + 1.0           # Power Layer: Battery, Booster, TP4056
+Z_STARBOARD_2 = Z_STARBOARD_3 + STARBOARD_T + 14.0        # Middle Layer: ESP32 DevKit
+Z_STARBOARD_1 = Z_STARBOARD_2 + STARBOARD_T + ESP32_H + 1.0 # Front Layer: Upper Mic + SD + Push Button + ON/OFF Switch + LED
+Z_FRONT_CARD  = PENDANT_D - CARDBOARD_T                   # Front Cardboard Cover
+
+# Colors
+C_CARDBOARD = (0.78, 0.62, 0.44, 0.0)
+C_WALLS     = (0.69, 0.53, 0.36, 0.0)
+C_STARBOARD = (0.12, 0.44, 0.22, 0.0)
+C_ESP32     = (0.12, 0.20, 0.65, 0.0)
+C_METAL     = (0.80, 0.82, 0.85, 0.0)
+C_MIC       = (0.45, 0.15, 0.55, 0.0)
+C_SD        = (0.15, 0.25, 0.45, 0.0)
+C_BAT       = (0.82, 0.84, 0.86, 0.0)
+C_TP        = (0.12, 0.52, 0.20, 0.0)
+C_BST       = (0.75, 0.20, 0.15, 0.0)
+C_LED       = (0.00, 0.82, 1.00, 0.1)
+C_BTN       = (0.12, 0.12, 0.12, 0.0)
+C_SWITCH    = (0.85, 0.20, 0.20, 0.0)  # Red actuator switch knob
+C_STANDOFF  = (0.88, 0.75, 0.25, 0.0)
+C_DIM       = (0.95, 0.20, 0.10, 0.0)
+
+def set_view(obj, color):
+    try:
+        obj.ViewObject.ShapeColor = (color[0], color[1], color[2])
+        if len(color) > 3:
+            obj.ViewObject.Transparency = int(color[3] * 100)
+    except Exception:
+        pass
+
+def create_octagonal_face(w, h, c, z=0.0):
+    pts = [
+        FreeCAD.Vector(c,     0,     z),
+        FreeCAD.Vector(w - c, 0,     z),
+        FreeCAD.Vector(w,     c,     z),
+        FreeCAD.Vector(w,     h - c, z),
+        FreeCAD.Vector(w - c, h,     z),
+        FreeCAD.Vector(c,     h,     z),
+        FreeCAD.Vector(0,     h - c, z),
+        FreeCAD.Vector(0,     c,     z),
+    ]
+    edges = [Part.makeLine(pts[i], pts[(i + 1) % len(pts)]) for i in range(len(pts))]
+    return Part.Face(Part.Wire(edges))
+
+# Groups
+g_front = doc.addObject("App::DocumentObjectGroup", "01_Front_Cardboard_Cover")
+g_ctrl  = doc.addObject("App::DocumentObjectGroup", "02_Front_Controls_Switches_LED")
+g_sb1   = doc.addObject("App::DocumentObjectGroup", "03_Starboard_1_Upper_Mic_and_SD_Card")
+g_sb2   = doc.addObject("App::DocumentObjectGroup", "04_Starboard_2_ESP32_DevKit")
+g_sb3   = doc.addObject("App::DocumentObjectGroup", "05_Starboard_3_Power_and_Battery")
+g_walls = doc.addObject("App::DocumentObjectGroup", "06_Perimeter_Cardboard_Walls")
+g_back  = doc.addObject("App::DocumentObjectGroup", "07_Back_Cover_and_Lanyard")
+g_dims  = doc.addObject("App::DocumentObjectGroup", "08_Dimensions_and_Measurements")
+
+SB_X = (PENDANT_W - STARBOARD_W) / 2.0
+SB_Y = (PENDANT_H - STARBOARD_L) / 2.0
+
+# Front Controls Placement:
+# 1. Blue LED: Upper Center (Y = 72 mm)
+LED_X = PENDANT_W / 2.0
+LED_Y = PENDANT_H * 0.74
+
+# 2. Push Button: Middle Center (Y = 46 mm)
+BTN_X = PENDANT_W / 2.0
+BTN_Y = PENDANT_H * 0.48
+
+# 3. ON/OFF Power Switch: Lower Center (Y = 24 mm)
+SW_X = PENDANT_W / 2.0
+SW_Y = PENDANT_H * 0.24
+
+# 4. Upper Side Microphone: Top Left (Y = 74 mm)
+MIC_X = SB_X + 4.0
+MIC_Y = SB_Y + STARBOARD_L - MIC_L - 4.0
+
+# ============================================================
+# 1. FRONT CARDBOARD COVER
+# ============================================================
+f_face = create_octagonal_face(PENDANT_W, PENDANT_H, CHAMFER_C, Z_FRONT_CARD)
+f_solid = f_face.extrude(FreeCAD.Vector(0, 0, CARDBOARD_T))
+
+# Holes:
+# Hole 1: Blue LED
+hole_led = Part.makeCylinder(LED_DIA / 2.0 + 0.3, CARDBOARD_T + 2.0, FreeCAD.Vector(LED_X, LED_Y, Z_FRONT_CARD - 1.0))
+# Hole 2: Push Button
+hole_btn = Part.makeCylinder(BUTTON_DIA / 2.0 + 0.5, CARDBOARD_T + 2.0, FreeCAD.Vector(BTN_X, BTN_Y, Z_FRONT_CARD - 1.0))
+# Hole 3: ON/OFF Slide Switch slot
+hole_sw  = Part.makeBox(SWITCH_L + 1.0, SWITCH_W + 1.0, CARDBOARD_T + 2.0, FreeCAD.Vector(SW_X - (SWITCH_L+1.0)/2.0, SW_Y - (SWITCH_W+1.0)/2.0, Z_FRONT_CARD - 1.0))
+# Hole 4: Upper Microphone Sound Port
+hole_mic = Part.makeCylinder(1.5, CARDBOARD_T + 2.0, FreeCAD.Vector(MIC_X + MIC_W/2.0, MIC_Y + MIC_L/2.0, Z_FRONT_CARD - 1.0))
+
+f_solid = f_solid.cut(hole_led).cut(hole_btn).cut(hole_sw).cut(hole_mic)
+f_obj = doc.addObject("Part::Feature", "Plate_01_Front_Cardboard")
+f_obj.Shape = f_solid
+set_view(f_obj, C_CARDBOARD)
+g_front.addObject(f_obj)
+
+# ============================================================
+# 2. FRONT CONTROLS (BLUE LED + PUSH BUTTON + ON/OFF SWITCH)
+# ============================================================
+# 1. Blue LED
+led_d = Part.makeSphere(LED_DIA / 2.0, FreeCAD.Vector(LED_X, LED_Y, Z_FRONT_CARD + CARDBOARD_T + 0.5))
+led_b = Part.makeCylinder(LED_DIA / 2.0, CARDBOARD_T + 4.0, FreeCAD.Vector(LED_X, LED_Y, Z_STARBOARD_1 + STARBOARD_T + 1.0))
+led_obj = doc.addObject("Part::Feature", "Control_01_Blue_LED_5mm")
+led_obj.Shape = led_b.fuse(led_d)
+set_view(led_obj, C_LED)
+g_ctrl.addObject(led_obj)
+
+# 2. Push Button (Round Tactile Switch for Voice / Trigger)
+btn_base = Part.makeBox(8.0, 8.0, 4.0, FreeCAD.Vector(BTN_X - 4.0, BTN_Y - 4.0, Z_STARBOARD_1 + STARBOARD_T))
+btn_cap = Part.makeCylinder(BUTTON_DIA / 2.0, CARDBOARD_T + 5.0, FreeCAD.Vector(BTN_X, BTN_Y, Z_STARBOARD_1 + STARBOARD_T + 2.0))
+btn_obj = doc.addObject("Part::Feature", "Control_02_Push_Button_Switch")
+btn_obj.Shape = btn_base.fuse(btn_cap)
+set_view(btn_obj, C_BTN)
+g_ctrl.addObject(btn_obj)
+
+# 3. ON/OFF Power Switch (Miniature Slide Switch)
+sw_body = Part.makeBox(SWITCH_L, SWITCH_W, 3.5, FreeCAD.Vector(SW_X - SWITCH_L/2.0, SW_Y - SWITCH_W/2.0, Z_STARBOARD_1 + STARBOARD_T))
+sw_bracket = Part.makeBox(SWITCH_L + 3.0, SWITCH_W + 1.0, 0.8, FreeCAD.Vector(SW_X - (SWITCH_L+3.0)/2.0, SW_Y - (SWITCH_W+1.0)/2.0, Z_STARBOARD_1 + STARBOARD_T + 3.5))
+sw_lever = Part.makeBox(2.5, 2.5, CARDBOARD_T + 4.0, FreeCAD.Vector(SW_X - 1.25, SW_Y - 1.25, Z_STARBOARD_1 + STARBOARD_T + 3.5))
+sw_full = sw_body.fuse(sw_bracket).fuse(sw_lever)
+sw_obj = doc.addObject("Part::Feature", "Control_03_ON_OFF_Power_Switch")
+sw_obj.Shape = sw_full
+set_view(sw_obj, C_SWITCH)
+g_ctrl.addObject(sw_obj)
+
+# ============================================================
+# 3. STARBOARD 1 (TOP DECK): UPPER MIC + MICROSD CARD READER
+# ============================================================
+sb1_face = create_octagonal_face(STARBOARD_W, STARBOARD_L, CHAMFER_C - 2.0, Z_STARBOARD_1)
+sb1_solid = sb1_face.extrude(FreeCAD.Vector(0, 0, STARBOARD_T))
+sb1_obj = doc.addObject("Part::Feature", "Plate_02_Starboard_1_Mic_and_SD")
+sb1_obj.Shape = sb1_solid
+set_view(sb1_obj, C_STARBOARD)
+g_sb1.addObject(sb1_obj)
+
+# INMP441 MEMS Mic on UPPER SIDE (14 x 11 x 3.5 mm)
+mic_box = Part.makeBox(MIC_W, MIC_L, MIC_H, FreeCAD.Vector(MIC_X, MIC_Y, Z_STARBOARD_1 + STARBOARD_T))
+mic_obj = doc.addObject("Part::Feature", "INMP441_Upper_MEMS_Mic_14x11mm")
+mic_obj.Shape = mic_box
+set_view(mic_obj, C_MIC)
+g_sb1.addObject(mic_obj)
+
+# MicroSD Card Reader on Starboard 1 (50 x 25 x 10 mm)
+SD_X = SB_X + STARBOARD_W - SD_W - 3.0
+SD_Y = SB_Y + 6.0
+sd_pcb = Part.makeBox(SD_W, SD_L, 1.6, FreeCAD.Vector(SD_X, SD_Y, Z_STARBOARD_1 + STARBOARD_T))
+sd_metal = Part.makeBox(16.0, 18.0, 2.4, FreeCAD.Vector(SD_X + 4.5, SD_Y + 4.0, Z_STARBOARD_1 + STARBOARD_T + 1.6))
+sd_pins = Part.makeBox(SD_W - 4.0, 3.0, 6.0, FreeCAD.Vector(SD_X + 2.0, SD_Y + SD_L - 4.0, Z_STARBOARD_1 + STARBOARD_T + 1.6))
+sd_full = sd_pcb.fuse(sd_metal).fuse(sd_pins)
+sd_obj = doc.addObject("Part::Feature", "MicroSD_Card_Adapter_50x25mm")
+sd_obj.Shape = sd_full
+set_view(sd_obj, C_SD)
+g_sb1.addObject(sd_obj)
+
+# Standoffs SB1 to SB2
+for (sx, sy) in [
+    (SB_X + 3.0, SB_Y + 3.0),
+    (SB_X + STARBOARD_W - 6.0, SB_Y + 3.0),
+    (SB_X + 3.0, SB_Y + STARBOARD_L - 6.0),
+    (SB_X + STARBOARD_W - 6.0, SB_Y + STARBOARD_L - 6.0)
+]:
+    so = Part.makeCylinder(1.5, Z_STARBOARD_1 - (Z_STARBOARD_2 + STARBOARD_T), FreeCAD.Vector(sx + 1.5, sy + 1.5, Z_STARBOARD_2 + STARBOARD_T))
+    so_obj = doc.addObject("Part::Feature", "Standoff_SB1_to_SB2")
+    so_obj.Shape = so
+    set_view(so_obj, C_STANDOFF)
+    g_sb1.addObject(so_obj)
+
+# ============================================================
+# 4. STARBOARD 2 (MIDDLE DECK): ESP32-S3 DEVKIT (70 x 39 x 10 mm)
+# ============================================================
+sb2_face = create_octagonal_face(STARBOARD_W, STARBOARD_L, CHAMFER_C - 2.0, Z_STARBOARD_2)
+sb2_solid = sb2_face.extrude(FreeCAD.Vector(0, 0, STARBOARD_T))
+sb2_obj = doc.addObject("Part::Feature", "Plate_03_Starboard_2_ESP32")
+sb2_obj.Shape = sb2_solid
+set_view(sb2_obj, C_STARBOARD)
+g_sb2.addObject(sb2_obj)
+
+ESP_X = SB_X + (STARBOARD_W - ESP32_W) / 2.0
+ESP_Y = SB_Y + (STARBOARD_L - ESP32_L) / 2.0
+esp_pcb = Part.makeBox(ESP32_W, ESP32_L, 1.6, FreeCAD.Vector(ESP_X, ESP_Y, Z_STARBOARD_2 + STARBOARD_T))
+esp_rf = Part.makeBox(18.0, 25.0, 2.5, FreeCAD.Vector(ESP_X + (ESP32_W - 18.0)/2.0, ESP_Y + 18.0, Z_STARBOARD_2 + STARBOARD_T + 1.6))
+esp_usb = Part.makeBox(8.0, 7.0, 3.2, FreeCAD.Vector(ESP_X + (ESP32_W - 8.0)/2.0, ESP_Y + ESP32_L - 5.0, Z_STARBOARD_2 + STARBOARD_T + 1.6))
+esp_headers = Part.makeBox(2.5, ESP32_L - 8.0, 5.0, FreeCAD.Vector(ESP_X + 1.0, ESP_Y + 4.0, Z_STARBOARD_2 - 4.0))
+esp_headers2 = Part.makeBox(2.5, ESP32_L - 8.0, 5.0, FreeCAD.Vector(ESP_X + ESP32_W - 3.5, ESP_Y + 4.0, Z_STARBOARD_2 - 4.0))
+esp_full = esp_pcb.fuse(esp_rf).fuse(esp_usb).fuse(esp_headers).fuse(esp_headers2)
+esp_obj = doc.addObject("Part::Feature", "ESP32_DevKit_70x39x10mm")
+esp_obj.Shape = esp_full
+set_view(esp_obj, C_ESP32)
+g_sb2.addObject(esp_obj)
+
+# Standoffs SB2 to SB3
+for (sx, sy) in [
+    (SB_X + 3.0, SB_Y + 3.0),
+    (SB_X + STARBOARD_W - 6.0, SB_Y + 3.0),
+    (SB_X + 3.0, SB_Y + STARBOARD_L - 6.0),
+    (SB_X + STARBOARD_W - 6.0, SB_Y + STARBOARD_L - 6.0)
+]:
+    so = Part.makeCylinder(1.5, Z_STARBOARD_2 - (Z_STARBOARD_3 + STARBOARD_T), FreeCAD.Vector(sx + 1.5, sy + 1.5, Z_STARBOARD_3 + STARBOARD_T))
+    so_obj = doc.addObject("Part::Feature", "Standoff_SB2_to_SB3")
+    so_obj.Shape = so
+    set_view(so_obj, C_STANDOFF)
+    g_sb2.addObject(so_obj)
+
+# ============================================================
+# 5. STARBOARD 3 (BOTTOM DECK): POWER & BATTERY
+# ============================================================
+sb3_face = create_octagonal_face(STARBOARD_W, STARBOARD_L, CHAMFER_C - 2.0, Z_STARBOARD_3)
+sb3_solid = sb3_face.extrude(FreeCAD.Vector(0, 0, STARBOARD_T))
+sb3_obj = doc.addObject("Part::Feature", "Plate_04_Starboard_3_Power")
+sb3_obj.Shape = sb3_solid
+set_view(sb3_obj, C_STARBOARD)
+g_sb3.addObject(sb3_obj)
+
+# Boost Converter (45 x 23 x 15 mm)
+BST_X = SB_X + 3.0
+BST_Y = SB_Y + STARBOARD_L - BST_L - 4.0
+bst_pcb = Part.makeBox(BST_W, BST_L, 1.6, FreeCAD.Vector(BST_X, BST_Y, Z_STARBOARD_3 + STARBOARD_T))
+bst_ind = Part.makeBox(12.0, 12.0, 6.0, FreeCAD.Vector(BST_X + 2.0, BST_Y + 12.0, Z_STARBOARD_3 + STARBOARD_T + 1.6))
+bst_pot = Part.makeBox(6.0, 10.0, 7.0, FreeCAD.Vector(BST_X + BST_W - 8.0, BST_Y + 12.0, Z_STARBOARD_3 + STARBOARD_T + 1.6))
+bst_full = bst_pcb.fuse(bst_ind).fuse(bst_pot)
+bst_obj = doc.addObject("Part::Feature", "Boost_Converter_45x23x15mm")
+bst_obj.Shape = bst_full
+set_view(bst_obj, C_BST)
+g_sb3.addObject(bst_obj)
+
+# TP4056 Charger (30 x 18 x 3 mm)
+TP_X = SB_X + STARBOARD_W - TP_W - 3.0
+TP_Y = BST_Y + (BST_L - TP_L) / 2.0
+tp_pcb = Part.makeBox(TP_W, TP_L, 1.6, FreeCAD.Vector(TP_X, TP_Y, Z_STARBOARD_3 + STARBOARD_T))
+tp_usbc = Part.makeBox(8.0, 9.0, 3.2, FreeCAD.Vector(TP_X + TP_W - 4.0, TP_Y + (TP_L - 9.0)/2.0, Z_STARBOARD_3 + STARBOARD_T + 1.0))
+tp_full = tp_pcb.fuse(tp_usbc)
+tp_obj = doc.addObject("Part::Feature", "Battery_Charging_Board_30x18x3mm")
+tp_obj.Shape = tp_full
+set_view(tp_obj, C_TP)
+g_sb3.addObject(tp_obj)
+
+# LiPo Battery (37 x 25 x 5 mm)
+BAT_X = SB_X + (STARBOARD_W - BAT_W) / 2.0
+BAT_Y = SB_Y + 4.0
+bat_box = Part.makeBox(BAT_W, BAT_L, BAT_H, FreeCAD.Vector(BAT_X, BAT_Y, Z_STARBOARD_3 + STARBOARD_T))
+bat_rim = Part.makeBox(BAT_W + 3.0, BAT_L + 3.0, 0.8, FreeCAD.Vector(BAT_X - 1.5, BAT_Y - 1.5, Z_STARBOARD_3 + STARBOARD_T + 2.0))
+bat_full = bat_box.fuse(bat_rim)
+bat_obj = doc.addObject("Part::Feature", "LiPo_Battery_37x25x5mm")
+bat_obj.Shape = bat_full
+set_view(bat_obj, C_BAT)
+g_sb3.addObject(bat_obj)
+
+# ============================================================
+# 6. PERIMETER CARDBOARD SIDE WALLS
+# ============================================================
+w_outer = create_octagonal_face(PENDANT_W, PENDANT_H, CHAMFER_C, CARDBOARD_T)
+w_inner = create_octagonal_face(PENDANT_W - 2*CARDBOARD_T, PENDANT_H - 2*CARDBOARD_T, CHAMFER_C - CARDBOARD_T, CARDBOARD_T)
+inner_s = w_inner.extrude(FreeCAD.Vector(0, 0, PENDANT_D - 2*CARDBOARD_T))
+inner_s.Placement.Base = FreeCAD.Vector(CARDBOARD_T, CARDBOARD_T, CARDBOARD_T)
+outer_s = w_outer.extrude(FreeCAD.Vector(0, 0, PENDANT_D - 2*CARDBOARD_T))
+walls_s = outer_s.cut(inner_s)
+
+# Side Cutouts
+usb_cut = Part.makeBox(CARDBOARD_T * 2.0, 11.0, 6.5, FreeCAD.Vector(PENDANT_W - CARDBOARD_T - 1.0, TP_Y + (TP_L - 11.0)/2.0, Z_STARBOARD_3 + 1.0))
+usb_cut2 = Part.makeBox(CARDBOARD_T * 2.0, 14.0, 6.5, FreeCAD.Vector(PENDANT_W - CARDBOARD_T - 1.0, SD_Y + 4.0, Z_STARBOARD_1 + 1.0))
+walls_s = walls_s.cut(usb_cut).cut(usb_cut2)
+
+walls_obj = doc.addObject("Part::Feature", "Plate_05_Perimeter_Cardboard_Walls")
+walls_obj.Shape = walls_s
+set_view(walls_obj, C_WALLS)
+g_walls.addObject(walls_obj)
+
+# ============================================================
+# 7. BACK CARDBOARD COVER & LANYARD
+# ============================================================
+b_face = create_octagonal_face(PENDANT_W, PENDANT_H, CHAMFER_C, Z_BACK_CARD)
+b_solid = b_face.extrude(FreeCAD.Vector(0, 0, CARDBOARD_T))
+b_obj = doc.addObject("Part::Feature", "Plate_06_Back_Cardboard")
+b_obj.Shape = b_solid
+set_view(b_obj, C_CARDBOARD)
+g_back.addObject(b_obj)
+
+anchor = Part.makeBox(16.0, 6.0, 8.0, FreeCAD.Vector(PENDANT_W/2.0 - 8.0, PENDANT_H - 3.0, PENDANT_D/2.0 - 4.0))
+cord_l = Part.makeCylinder(1.5, 30.0, FreeCAD.Vector(PENDANT_W/2.0 - 4.0, PENDANT_H + 3.0, PENDANT_D/2.0), FreeCAD.Vector(-0.3, 1.0, 0.0))
+cord_r = Part.makeCylinder(1.5, 30.0, FreeCAD.Vector(PENDANT_W/2.0 + 4.0, PENDANT_H + 3.0, PENDANT_D/2.0), FreeCAD.Vector(0.3, 1.0, 0.0))
+strap_full = anchor.fuse(cord_l).fuse(cord_r)
+strap_obj = doc.addObject("Part::Feature", "Lanyard_Neck_Cord_Anchor")
+strap_obj.Shape = strap_full
+set_view(strap_obj, (0.1, 0.1, 0.1, 0.0))
+g_back.addObject(strap_obj)
+
+# ============================================================
+# 8. DIMENSIONS
+# ============================================================
+def add_dim(name, p1, p2, off, grp):
+    v1 = FreeCAD.Vector(*p1); v2 = FreeCAD.Vector(*p2); off_v = FreeCAD.Vector(*off)
+    diff = v2 - v1; length = diff.Length; dir_v = diff.normalize()
+    ep1 = v1 + off_v; ep2 = v2 + off_v
+    ext1 = Part.makeCylinder(0.2, off_v.Length, v1, off_v.normalize())
+    ext2 = Part.makeCylinder(0.2, off_v.Length, v2, off_v.normalize())
+    line = Part.makeCylinder(0.25, length, ep1, dir_v)
+    a1 = Part.makeCone(0.8, 0.0, 2.5, ep1 + dir_v * 2.5, -dir_v)
+    a2 = Part.makeCone(0.8, 0.0, 2.5, ep2 - dir_v * 2.5, dir_v)
+    d = ext1.fuse(ext2).fuse(line).fuse(a1).fuse(a2)
+    d_obj = doc.addObject("Part::Feature", name)
+    d_obj.Shape = d
+    set_view(d_obj, C_DIM)
+    grp.addObject(d_obj)
+
+add_dim("DIM_Width_62mm", (0, -3, Z_FRONT_CARD + CARDBOARD_T), (PENDANT_W, -3, Z_FRONT_CARD + CARDBOARD_T), (0, -10, 0), g_dims)
+add_dim("DIM_Height_90mm", (-3, 0, Z_FRONT_CARD + CARDBOARD_T), (-3, PENDANT_H, Z_FRONT_CARD + CARDBOARD_T), (-10, 0, 0), g_dims)
+add_dim("DIM_Depth_38mm", (PENDANT_W + 3, 20, 0), (PENDANT_W + 3, 20, PENDANT_D), (10, 0, 0), g_dims)
+
+doc.recompute()
+
+out_fcstd = r"C:\Users\Atul Kumar\Desktop\brain2-pendant-cad\ai_pendant_mvp.FCStd"
+doc.saveAs(out_fcstd)
+print(f"SUCCESS: Front controls (LED + Push Button + ON/OFF Switch) saved to {out_fcstd}")

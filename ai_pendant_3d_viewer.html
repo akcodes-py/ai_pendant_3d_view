@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain2 AI Pendant - Dual Front Controls (Push Button + ON/OFF Switch + LED + Upper Mic)</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --panel: rgba(16, 23, 38, 0.95);
+      --border: #253348;
+      --accent: #2563eb;
+      --accent-glow: #38bdf8;
+      --led: #00e5ff;
+      --gold: #fbbf24;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    header {
+      position: absolute;
+      top: 14px;
+      left: 18px;
+      z-index: 10;
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    header h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge-stack {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      background: #0f172a;
+      color: #38bdf8;
+      border: 1px solid #0284c7;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+    .overlay-panel {
+      position: absolute;
+      z-index: 10;
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.65);
+    }
+    #controls-panel {
+      top: 75px;
+      left: 18px;
+      width: 330px;
+      max-height: calc(100vh - 95px);
+      overflow-y: auto;
+    }
+    #details-panel {
+      top: 14px;
+      right: 18px;
+      width: 360px;
+      max-height: calc(100vh - 35px);
+      overflow-y: auto;
+    }
+    .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .slider-box {
+      margin-bottom: 14px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+    }
+    .slider-title {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      margin-bottom: 6px;
+    }
+    .slider-title span.val {
+      font-weight: 700;
+      color: #38bdf8;
+    }
+    input[type=range] {
+      width: 100%;
+      height: 6px;
+      border-radius: 4px;
+      background: #334155;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #0284c7;
+      cursor: pointer;
+      box-shadow: 0 0 10px #38bdf8;
+    }
+    .layer-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .btn-layer {
+      background: #151f30;
+      border: 1px solid #29384f;
+      color: #e2e8f0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+    .btn-layer:hover, .btn-layer.active {
+      background: #1e3a8a;
+      border-color: #38bdf8;
+      color: #fff;
+    }
+    .btn-layer span.tag {
+      font-size: 0.68rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.3);
+      color: #94a3b8;
+    }
+    .btn-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    button.btn-action {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      padding: 7px 4px;
+      border-radius: 8px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button.btn-action:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+    /* Front Controls Dual Simulator */
+    .controls-sim-box {
+      background: linear-gradient(135deg, #182234, #0f172a);
+      border: 1px solid #334155;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+    }
+    .sim-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .sim-row:last-child {
+      margin-bottom: 0;
+    }
+    .toggle-switch-ui {
+      width: 44px;
+      height: 22px;
+      background: #334155;
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .toggle-switch-ui.on {
+      background: #16a34a;
+    }
+    .toggle-knob {
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      transition: all 0.2s;
+    }
+    .toggle-switch-ui.on .toggle-knob {
+      left: 25px;
+    }
+    .btn-push-ui {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #f1f5f9;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-push-ui:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56,189,248,0.4);
+    }
+    .btn-push-ui:active {
+      transform: scale(0.96);
+    }
+    .led-indicator-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #0369a1;
+      border: 2px solid #38bdf8;
+      transition: all 0.2s;
+    }
+    .led-indicator-dot.active {
+      background: #00e5ff;
+      box-shadow: 0 0 14px #00e5ff, 0 0 24px #00e5ff;
+    }
+    table.specs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+      margin-bottom: 14px;
+    }
+    table.specs-table th {
+      text-align: left;
+      color: var(--muted);
+      padding: 6px 4px;
+      border-bottom: 1px solid #283548;
+    }
+    table.specs-table td {
+      padding: 6px 4px;
+      border-bottom: 1px solid #1a2333;
+    }
+    .val-dim {
+      font-weight: 700;
+      color: #38bdf8;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+    .comp-info-card {
+      background: #141c2c;
+      border: 1px solid #243248;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+    .comp-info-card h4 {
+      font-size: 0.82rem;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .comp-info-card p {
+      font-size: 0.73rem;
+      color: #94a3b8;
+      line-height: 1.35;
+    }
+    .pinout-tag {
+      font-size: 0.65rem;
+      background: #0f172a;
+      color: #38bdf8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-top: 4px;
+      border: 1px solid #1e3a8a;
+    }
+    .bottom-hint {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid #334155;
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      pointer-events: none;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <header>
+    <h1>Brain2 AI Pendant <span>Dual Front Controls (Push + ON/OFF Switch)</span></h1>
+    <span class="badge-stack">Stacked Architecture</span>
+  </header>
+
+  <div id="canvas-container"></div>
+
+  <!-- Left: Controls & Simulator -->
+  <div class="overlay-panel" id="controls-panel">
+    <div class="section-title">
+      <span>Front Controls Simulator</span>
+      <span style="color:#00e5ff;">Interactive</span>
+    </div>
+
+    <!-- Dual Button Simulator Box -->
+    <div class="controls-sim-box">
+      <!-- 1. ON/OFF Power Slide Switch -->
+      <div class="sim-row">
+        <div>
+          <div style="font-size:0.8rem; font-weight:700;">1. Power ON/OFF Switch</div>
+          <div style="font-size:0.68rem; color:#94a3b8;" id="pwr-status-text">State: ON (Power Active)</div>
+        </div>
+        <div class="toggle-switch-ui on" id="pwr-switch-btn" onclick="togglePowerSwitch()">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+
+      <!-- 2. Push Button (Voice / AI Record) -->
+      <div class="sim-row" style="margin-top: 8px;">
+        <div>
+          <div style="font-size:0.8rem; font-weight:700;">2. Push Button</div>
+          <div style="font-size:0.68rem; color:#94a3b8;" id="record-status-text">Ready for trigger</div>
+        </div>
+        <button class="btn-push-ui" id="push-btn" onclick="triggerPushAction()">Press Button</button>
+      </div>
+
+      <!-- 3. Blue LED Status -->
+      <div class="sim-row" style="margin-top: 8px; border-top:1px solid #283548; padding-top:8px;">
+        <span style="font-size:0.75rem; color:#cbd5e1;">Front Blue LED:</span>
+        <div class="led-indicator-dot active" id="sim-led"></div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <span>Vertical Layer Explosion</span>
+    </div>
+
+    <!-- Explode Slider -->
+    <div class="slider-box">
+      <div class="slider-title">
+        <span>Layer Separation</span>
+        <span class="val" id="explode-display">0 mm</span>
+      </div>
+      <input type="range" id="explode-range" min="0" max="100" value="0">
+    </div>
+
+    <!-- Quick Camera Views -->
+    <div class="btn-grid-3">
+      <button class="btn-action" onclick="setCam('front')">Front</button>
+      <button class="btn-action" onclick="setCam('side')">Side (SD+USB)</button>
+      <button class="btn-action" onclick="setCam('back')">Back</button>
+      <button class="btn-action" onclick="setCam('top')">Top (Mic)</button>
+      <button class="btn-action" onclick="setCam('iso')">Isometric</button>
+      <button class="btn-action" onclick="resetAll()">Reset</button>
+    </div>
+
+    <!-- Layer Isolation Selector -->
+    <div class="section-title">
+      <span>Focus Layer</span>
+    </div>
+
+    <div class="layer-selector">
+      <button class="btn-layer active" onclick="focusLayer('all')">
+        <span>All Layers (Complete Stack)</span>
+        <span class="tag">Assembly</span>
+      </button>
+      <button class="btn-layer" onclick="focusLayer('cardboard_front')">
+        <span>1. Front Cover (Holes for 2 Buttons + LED)</span>
+        <span class="tag">Plate 1</span>
+      </button>
+      <button class="btn-layer" onclick="focusLayer('sb1')">
+        <span>2. Starboard 1: Upper Mic + SD + 2 Buttons</span>
+        <span class="tag">Deck 1</span>
+      </button>
+      <button class="btn-layer" onclick="focusLayer('sb2')">
+        <span>3. Starboard 2: ESP32-S3 DevKit</span>
+        <span class="tag">Deck 2</span>
+      </button>
+      <button class="btn-layer" onclick="focusLayer('sb3')">
+        <span>4. Starboard 3: Booster + Charger + Battery</span>
+        <span class="tag">Deck 3</span>
+      </button>
+      <button class="btn-layer" onclick="focusLayer('cardboard_back')">
+        <span>5. Enclosure Walls & Back</span>
+        <span class="tag">Plate 5</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Right: Exact Dimensions & Placement Specs -->
+  <div class="overlay-panel" id="details-panel">
+    <div class="section-title">
+      <span>Front Controls Specification</span>
+      <span style="color:#fbbf24;">Front Face</span>
+    </div>
+
+    <table class="specs-table">
+      <thead>
+        <tr><th>Control Item</th><th>Type</th><th>Location</th><th>Wiring</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>1. Indicator LED</strong></td><td>5mm Blue Through-hole</td><td>Upper Center (Y=72mm)</td><td class="val-dim">GPIO 2 (220Ω)</td></tr>
+        <tr><td><strong>2. Push Button</strong></td><td>Tactile Momentary</td><td>Mid Center (Y=46mm)</td><td class="val-dim">GPIO 0 / Pullup</td></tr>
+        <tr><td><strong>3. ON/OFF Switch</strong></td><td>Slide / Toggle Switch</td><td>Lower Center (Y=24mm)</td><td class="val-dim">Battery Power Cut</td></tr>
+        <tr><td><strong>4. Upper MEMS Mic</strong></td><td>INMP441 I2S Port</td><td>Top-Left (Y=74mm)</td><td class="val-dim">GPIO 14, 15, 32</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-title">
+      <span>Stack Architecture Breakdown</span>
+    </div>
+
+    <!-- Deck 1 -->
+    <div class="comp-info-card">
+      <h4><span style="color:#22c55e;">●</span> Starboard 1 (Front Deck): Mic + SD + Controls</h4>
+      <p>Directly beneath the front cardboard cover. Houses:
+      <br>• <strong>Upper-Side INMP441 Mic</strong> directly behind the top acoustic hole.
+      <br>• <strong>5mm Blue Indicator LED</strong> with dome extending through the front.
+      <br>• <strong>Round Push Button</strong> for thumb activation / AI trigger.
+      <br>• <strong>ON/OFF Power Slide Switch</strong> to turn the entire device on and off.
+      <br>• <strong>MicroSD card reader</strong> on the side edge for direct card insertion.</p>
+    </div>
+
+    <!-- Deck 2 -->
+    <div class="comp-info-card">
+      <h4><span style="color:#38bdf8;">●</span> Starboard 2 (Middle Deck): ESP32-S3</h4>
+      <p>Centrally positioned microcontroller tier. Mounts the <strong>ESP32-S3 DevKit (70 × 39 × 10 mm)</strong> with dual header pin rows routing signals upward to Deck 1 and power downward to Deck 3.</p>
+    </div>
+
+    <!-- Deck 3 -->
+    <div class="comp-info-card">
+      <h4><span style="color:#ef4444;">●</span> Starboard 3 (Bottom Deck): Power Subsystem</h4>
+      <p>Houses the <strong>MT3608 5V Step-Up Boost Converter (45 × 23 × 15 mm)</strong>, <strong>TP4056 Charger (30 × 18 × 3 mm)</strong> with USB-C connector facing the side cutout, and securely beds the <strong>37 × 25 × 5 mm LiPo battery</strong>.</p>
+    </div>
+  </div>
+
+  <div class="bottom-hint">
+    Left Click + Drag to Rotate • Right Click to Pan • Scroll to Zoom • Toggle ON/OFF Switch or Press Button
+  </div>
+
+  <script>
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x090d16);
+
+    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 2000);
+    camera.position.set(125, 90, 175);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.target.set(0, 0, 0);
+
+    const amb = new THREE.AmbientLight(0xffffff, 0.75);
+    scene.add(amb);
+    const dir1 = new THREE.DirectionalLight(0xffffff, 0.9);
+    dir1.position.set(120, 150, 100);
+    dir1.castShadow = true;
+    scene.add(dir1);
+    const dir2 = new THREE.DirectionalLight(0x38bdf8, 0.4);
+    dir2.position.set(-120, -100, -100);
+    scene.add(dir2);
+
+    function makeCanvas(w, h) {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      return c;
+    }
+
+    function createESP32Texture() {
+      const canvas = makeCanvas(512, 1024);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, 512, 1024);
+      ctx.fillStyle = '#d97706';
+      for (let y = 80; y < 960; y += 36) {
+        ctx.beginPath(); ctx.arc(24, y, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(488, y, 9, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.fillStyle = '#0f172a';
+      for (let y = 80; y < 960; y += 36) {
+        ctx.beginPath(); ctx.arc(24, y, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(488, y, 4, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 26px monospace';
+      ctx.fillText('ESP32-S3 DevKit', 130, 140);
+      ctx.font = '16px monospace';
+      ctx.fillText('WROOM-1 N8R8 (70x39mm)', 140, 175);
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(120, 40); ctx.lineTo(390, 40);
+      ctx.lineTo(390, 80); ctx.lineTo(120, 80);
+      ctx.stroke();
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createStarboardTexture() {
+      const canvas = makeCanvas(512, 1024);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#14532d';
+      ctx.fillRect(0, 0, 512, 1024);
+      ctx.fillStyle = '#eab308';
+      for (let x = 20; x < 500; x += 24) {
+        for (let y = 20; y < 1010; y += 24) {
+          ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.fillStyle = '#052e16';
+      for (let x = 20; x < 500; x += 24) {
+        for (let y = 20; y < 1010; y += 24) {
+          ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createSDTexture() {
+      const canvas = makeCanvas(512, 512);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('MICRO SD ADAPTER', 110, 80);
+      ctx.font = '18px monospace';
+      ctx.fillText('50 x 25 x 10 mm (SPI)', 130, 120);
+      const pins = ['GND', 'VCC', 'MISO', 'MOSI', 'SCK', 'CS'];
+      ctx.font = 'bold 22px monospace';
+      pins.forEach((p, idx) => {
+        ctx.fillText(p, 40 + idx * 75, 470);
+      });
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createBoosterTexture() {
+      const canvas = makeCanvas(512, 512);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('MT3608 BOOST 3V→5V', 90, 80);
+      ctx.font = '18px monospace';
+      ctx.fillText('45 x 23 x 15 mm', 170, 120);
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 36px monospace';
+      ctx.fillText('IN+', 30, 460); ctx.fillText('IN-', 30, 160);
+      ctx.fillText('OUT+', 390, 460); ctx.fillText('OUT-', 390, 160);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createTPTexture() {
+      const canvas = makeCanvas(512, 512);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#155e75';
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('TP4056 5V 1A CHARGER', 80, 80);
+      ctx.font = '18px monospace';
+      ctx.fillText('30 x 18 x 3 mm', 170, 120);
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 32px monospace';
+      ctx.fillText('B+', 40, 450); ctx.fillText('B-', 400, 450);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createBatteryTexture() {
+      const canvas = makeCanvas(512, 512);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.fillStyle = '#ca8a04';
+      ctx.fillRect(0, 0, 512, 90);
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('3.7V 800mAh 2.96Wh Li-Po', 70, 200);
+      ctx.font = '22px sans-serif';
+      ctx.fillText('Model: 602535 (37×25×5mm)', 80, 250);
+      ctx.font = '18px monospace';
+      ctx.fillText('Red(+) Black(-) Rechargeable', 100, 310);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createMicTexture() {
+      const canvas = makeCanvas(256, 256);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#4c1d95';
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath(); ctx.arc(128, 128, 42, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.beginPath(); ctx.arc(128, 128, 18, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px monospace';
+      ctx.fillText('INMP441 MIC', 55, 45);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createCardboardTexture() {
+      const canvas = makeCanvas(512, 512);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#b89772';
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.fillStyle = '#a2805b';
+      for (let i = 0; i < 3500; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        ctx.fillRect(x, y, Math.random() * 3, Math.random() * 2);
+      }
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    const matESP32 = new THREE.MeshStandardMaterial({ map: createESP32Texture(), roughness: 0.35 });
+    const matStarboard = new THREE.MeshStandardMaterial({ map: createStarboardTexture(), roughness: 0.45 });
+    const matSD = new THREE.MeshStandardMaterial({ map: createSDTexture(), roughness: 0.4 });
+    const matBooster = new THREE.MeshStandardMaterial({ map: createBoosterTexture(), roughness: 0.4 });
+    const matTP = new THREE.MeshStandardMaterial({ map: createTPTexture(), roughness: 0.4 });
+    const matBat = new THREE.MeshStandardMaterial({ map: createBatteryTexture(), roughness: 0.3, metalness: 0.4 });
+    const matMic = new THREE.MeshStandardMaterial({ map: createMicTexture(), roughness: 0.4 });
+    const matCardboard = new THREE.MeshStandardMaterial({ map: createCardboardTexture(), roughness: 0.85 });
+    const matCardboardEdge = new THREE.MeshStandardMaterial({ color: 0x9b7a58, roughness: 0.9 });
+    const matMetal = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.25, metalness: 0.9 });
+    const matGold = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3, metalness: 0.85 });
+    const matButton = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.4, metalness: 0.2 });
+    const matSwitchActuator = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3 }); // Red toggle knob
+    const matLED = new THREE.MeshStandardMaterial({ color: 0x00e5ff, roughness: 0.1, emissive: 0x00aacc, emissiveIntensity: 0.8 });
+    const matBrassStandoff = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.3, metalness: 0.8 });
+
+    function makeOctagon(w, h, c) {
+      const s = new THREE.Shape();
+      const hw = w/2, hh = h/2;
+      s.moveTo(-hw + c, -hh);
+      s.lineTo(hw - c, -hh);
+      s.lineTo(hw, -hh + c);
+      s.lineTo(hw, hh - c);
+      s.lineTo(hw - c, hh);
+      s.lineTo(-hw + c, hh);
+      s.lineTo(-hw, hh - c);
+      s.lineTo(-hw, -hh + c);
+      s.closePath();
+      return s;
+    }
+
+    const rootAssembly = new THREE.Group();
+    scene.add(rootAssembly);
+
+    const layerGroups = {
+      cardboard_front: new THREE.Group(),
+      sb1: new THREE.Group(),
+      sb2: new THREE.Group(),
+      sb3: new THREE.Group(),
+      cardboard_back: new THREE.Group()
+    };
+    Object.values(layerGroups).forEach(g => rootAssembly.add(g));
+
+    const PW = 62, PH = 90, PD = 38;
+    const SW = 54, SH = 82;
+
+    const Z_FRONT_CARD = 17.0;
+    const Z_SB1 = 9.0;    // Deck 1: Upper Mic + SD + Push Button + ON/OFF Switch + LED
+    const Z_SB2 = -1.0;   // Deck 2: ESP32-S3 DevKit
+    const Z_SB3 = -11.0;  // Deck 3: Booster + Charger + Battery
+    const Z_BACK_CARD = -19.0;
+
+    // ----------------------------------------------------
+    // 1. FRONT CARDBOARD COVER
+    // ----------------------------------------------------
+    const fShape = makeOctagon(PW, PH, 8);
+    // 1. Blue LED hole (upper center)
+    const hLED = new THREE.Path(); hLED.absarc(0, 22, 2.8, 0, Math.PI*2, true); fShape.holes.push(hLED);
+    // 2. Push Button hole (mid center)
+    const hBTN = new THREE.Path(); hBTN.absarc(0, -2, 3.8, 0, Math.PI*2, true); fShape.holes.push(hBTN);
+    // 3. ON/OFF Slide Switch slot (lower center)
+    const hSW = new THREE.Path();
+    hSW.moveTo(-5, -21); hSW.lineTo(5, -21); hSW.lineTo(5, -25); hSW.lineTo(-5, -25); hSW.closePath();
+    fShape.holes.push(hSW);
+    // 4. Upper Mic Sound Pinhole (top left)
+    const hMIC = new THREE.Path(); hMIC.absarc(-16, 26, 1.8, 0, Math.PI*2, true); fShape.holes.push(hMIC);
+
+    const fMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(fShape, { depth: 2, bevelEnabled: false }), matCardboard);
+    fMesh.position.z = Z_FRONT_CARD;
+    layerGroups.cardboard_front.add(fMesh);
+
+    // Front Controls
+    // 1. Blue LED
+    const ledMesh = new THREE.Mesh(new THREE.SphereGeometry(2.5, 24, 16, 0, Math.PI*2, 0, Math.PI/2), matLED);
+    ledMesh.rotation.x = -Math.PI/2;
+    ledMesh.position.set(0, 22, Z_FRONT_CARD + 2.5);
+    layerGroups.cardboard_front.add(ledMesh);
+
+    // 2. Round Push Button Cap
+    const btnMesh = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 3.0, 32), matButton);
+    btnMesh.rotation.x = Math.PI/2;
+    btnMesh.position.set(0, -2, Z_FRONT_CARD + 2.5);
+    layerGroups.cardboard_front.add(btnMesh);
+
+    // 3. ON/OFF Power Switch (Slide Switch lever)
+    const swKnobGeom = new THREE.BoxGeometry(3.0, 3.0, 3.5);
+    const swKnobMesh = new THREE.Mesh(swKnobGeom, matSwitchActuator);
+    swKnobMesh.position.set(2.5, -23, Z_FRONT_CARD + 2.5); // "ON" position
+    layerGroups.cardboard_front.add(swKnobMesh);
+
+    // Decorative "ON" and "OFF" text indicators on front face
+    const micRing = new THREE.Mesh(new THREE.RingGeometry(1.8, 2.8, 24), new THREE.MeshBasicMaterial({ color: 0xd97706, side: THREE.DoubleSide }));
+    micRing.position.set(-16, 26, Z_FRONT_CARD + 2.05);
+    layerGroups.cardboard_front.add(micRing);
+
+    // ----------------------------------------------------
+    // 2. STARBOARD 1 (FRONT DECK): CONTROLS + UPPER MIC + SD
+    // ----------------------------------------------------
+    const sb1Shape = makeOctagon(SW, SH, 6);
+    const sb1Mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(sb1Shape, { depth: 1.6, bevelEnabled: false }), matStarboard);
+    sb1Mesh.position.z = Z_SB1;
+    layerGroups.sb1.add(sb1Mesh);
+
+    // INMP441 MEMS Microphone on UPPER SIDE (14 x 11 x 3.5 mm)
+    const micMesh = new THREE.Mesh(new THREE.BoxGeometry(11, 14, 3.5), matMic);
+    micMesh.position.set(-16, 26, Z_SB1 + 2.4);
+    layerGroups.sb1.add(micMesh);
+
+    // MicroSD Card Adapter (50 x 25 x 10 mm)
+    const sdMesh = new THREE.Mesh(new THREE.BoxGeometry(25, 50, 1.6), matSD);
+    sdMesh.position.set(11, -8, Z_SB1 + 2.4);
+    layerGroups.sb1.add(sdMesh);
+
+    const sdSlot = new THREE.Mesh(new THREE.BoxGeometry(16, 18, 2.8), matMetal);
+    sdSlot.position.set(16, -18, Z_SB1 + 4.6);
+    layerGroups.sb1.add(sdSlot);
+
+    const cardMesh = new THREE.Mesh(new THREE.BoxGeometry(11, 14, 1.0), matButton);
+    cardMesh.position.set(16, -26, Z_SB1 + 4.6);
+    layerGroups.sb1.add(cardMesh);
+
+    // Push button tactile switch body on Starboard 1
+    const btnBase = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 4), matButton);
+    btnBase.position.set(0, -2, Z_SB1 + 2.8);
+    layerGroups.sb1.add(btnBase);
+
+    // Slide switch body & metal bracket on Starboard 1
+    const swBase = new THREE.Mesh(new THREE.BoxGeometry(9, 4.5, 4), matMetal);
+    swBase.position.set(0, -23, Z_SB1 + 2.8);
+    layerGroups.sb1.add(swBase);
+
+    // 4 Corner Brass Standoffs (Connecting SB1 to SB2)
+    const standoffGeom = new THREE.CylinderGeometry(1.5, 1.5, 8.4, 16);
+    [[-22, -34], [22, -34], [-22, 34], [22, 34]].forEach(([sx, sy]) => {
+      const so = new THREE.Mesh(standoffGeom, matBrassStandoff);
+      so.rotation.x = Math.PI/2;
+      so.position.set(sx, sy, (Z_SB1 + Z_SB2) / 2);
+      layerGroups.sb1.add(so);
+    });
+
+    // ----------------------------------------------------
+    // 3. STARBOARD 2 (MIDDLE DECK): ESP32-S3 DEVKIT (70 x 39 x 10 mm)
+    // ----------------------------------------------------
+    const sb2Shape = makeOctagon(SW, SH, 6);
+    const sb2Mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(sb2Shape, { depth: 1.6, bevelEnabled: false }), matStarboard);
+    sb2Mesh.position.z = Z_SB2;
+    layerGroups.sb2.add(sb2Mesh);
+
+    const espMesh = new THREE.Mesh(new THREE.BoxGeometry(39, 70, 1.6), matESP32);
+    espMesh.position.set(0, 0, Z_SB2 + 2.4);
+    layerGroups.sb2.add(espMesh);
+
+    const rfMesh = new THREE.Mesh(new THREE.BoxGeometry(18, 25, 2.5), matMetal);
+    rfMesh.position.set(0, 12, Z_SB2 + 4.4);
+    layerGroups.sb2.add(rfMesh);
+
+    const usbMesh = new THREE.Mesh(new THREE.BoxGeometry(8, 7, 3.2), matMetal);
+    usbMesh.position.set(0, 34, Z_SB2 + 4.5);
+    layerGroups.sb2.add(usbMesh);
+
+    const hdr1 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 62, 7.0), matGold);
+    hdr1.position.set(-18, 0, Z_SB2 - 2.5);
+    const hdr2 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 62, 7.0), matGold);
+    hdr2.position.set(18, 0, Z_SB2 - 2.5);
+    layerGroups.sb2.add(hdr1); layerGroups.sb2.add(hdr2);
+
+    const standoff2Geom = new THREE.CylinderGeometry(1.5, 1.5, 8.4, 16);
+    [[-22, -34], [22, -34], [-22, 34], [22, 34]].forEach(([sx, sy]) => {
+      const so = new THREE.Mesh(standoff2Geom, matBrassStandoff);
+      so.rotation.x = Math.PI/2;
+      so.position.set(sx, sy, (Z_SB2 + Z_SB3) / 2);
+      layerGroups.sb2.add(so);
+    });
+
+    // ----------------------------------------------------
+    // 4. STARBOARD 3 (BOTTOM DECK): POWER & BATTERY
+    // ----------------------------------------------------
+    const sb3Shape = makeOctagon(SW, SH, 6);
+    const sb3Mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(sb3Shape, { depth: 1.6, bevelEnabled: false }), matStarboard);
+    sb3Mesh.position.z = Z_SB3;
+    layerGroups.sb3.add(sb3Mesh);
+
+    const bstMesh = new THREE.Mesh(new THREE.BoxGeometry(23, 45, 1.6), matBooster);
+    bstMesh.position.set(-12, 12, Z_SB3 + 2.4);
+    layerGroups.sb3.add(bstMesh);
+
+    const indMesh = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 5.5, 6.0, 20), matMetal);
+    indMesh.rotation.x = Math.PI/2;
+    indMesh.position.set(-14, 12, Z_SB3 + 6.0);
+    layerGroups.sb3.add(indMesh);
+
+    const potMesh = new THREE.Mesh(new THREE.BoxGeometry(5, 9, 7.0), new THREE.MeshStandardMaterial({ color: 0x2563eb }));
+    potMesh.position.set(-6, 20, Z_SB3 + 6.5);
+    layerGroups.sb3.add(potMesh);
+
+    const tpMesh = new THREE.Mesh(new THREE.BoxGeometry(18, 30, 1.6), matTP);
+    tpMesh.position.set(13, 16, Z_SB3 + 2.4);
+    layerGroups.sb3.add(tpMesh);
+
+    const tpUsb = new THREE.Mesh(new THREE.BoxGeometry(6, 9, 3.2), matMetal);
+    tpUsb.position.set(22, 16, Z_SB3 + 2.8);
+    layerGroups.sb3.add(tpUsb);
+
+    const batMesh = new THREE.Mesh(new THREE.BoxGeometry(25, 37, 5.0), matBat);
+    batMesh.position.set(0, -18, Z_SB3 + 4.1);
+    layerGroups.sb3.add(batMesh);
+
+    const wireRed = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 20), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+    wireRed.position.set(-8, -4, Z_SB3 + 5);
+    const wireBlk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 20), new THREE.MeshBasicMaterial({ color: 0x111827 }));
+    wireBlk.position.set(-5, -4, Z_SB3 + 5);
+    layerGroups.sb3.add(wireRed); layerGroups.sb3.add(wireBlk);
+
+    // ----------------------------------------------------
+    // 5. ENCLOSURE WALLS & BACK COVER
+    // ----------------------------------------------------
+    const wOuter = makeOctagon(PW, PH, 8);
+    const wInner = new THREE.Path();
+    const iw = PW - 4, ih = PH - 4, ic = 6;
+    wInner.moveTo(-iw/2 + ic, -ih/2);
+    wInner.lineTo(iw/2 - ic, -ih/2);
+    wInner.lineTo(iw/2, -ih/2 + ic);
+    wInner.lineTo(iw/2, ih/2 - ic);
+    wInner.lineTo(iw/2 - ic, ih/2);
+    wInner.lineTo(-iw/2 + ic, ih/2);
+    wInner.lineTo(-iw/2, ih/2 - ic);
+    wInner.lineTo(-iw/2, -ih/2 + ic);
+    wInner.closePath();
+    wOuter.holes.push(wInner);
+
+    const wallsMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(wOuter, { depth: PD - 4, bevelEnabled: false }), matCardboardEdge);
+    wallsMesh.position.z = -PD/2 + 2;
+    layerGroups.cardboard_back.add(wallsMesh);
+
+    const cutUSB = new THREE.Mesh(new THREE.BoxGeometry(4, 11, 6), new THREE.MeshBasicMaterial({ color: 0x0f172a }));
+    cutUSB.position.set(PW/2 - 1, 16, Z_SB3 + 2.8);
+    layerGroups.cardboard_back.add(cutUSB);
+
+    const cutSD = new THREE.Mesh(new THREE.BoxGeometry(4, 14, 6), new THREE.MeshBasicMaterial({ color: 0x0f172a }));
+    cutSD.position.set(PW/2 - 1, -18, Z_SB1 + 4.6);
+    layerGroups.cardboard_back.add(cutSD);
+
+    const bShape = makeOctagon(PW, PH, 8);
+    const bMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(bShape, { depth: 2, bevelEnabled: false }), matCardboard);
+    bMesh.position.z = Z_BACK_CARD;
+    layerGroups.cardboard_back.add(bMesh);
+
+    const bracket = new THREE.Mesh(new THREE.BoxGeometry(16, 6, 8), matButton);
+    bracket.position.set(0, PH/2 - 2, 0);
+    layerGroups.cardboard_back.add(bracket);
+
+    const cordCurveL = new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(-4, PH/2, 0),
+      new THREE.Vector3(-14, PH/2 + 25, 0),
+      new THREE.Vector3(-22, PH/2 + 55, 0)
+    );
+    const cordL = new THREE.Mesh(new THREE.TubeGeometry(cordCurveL, 20, 1.6, 8, false), matButton);
+    layerGroups.cardboard_back.add(cordL);
+
+    const cordCurveR = new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(4, PH/2, 0),
+      new THREE.Vector3(14, PH/2 + 25, 0),
+      new THREE.Vector3(22, PH/2 + 55, 0)
+    );
+    const cordR = new THREE.Mesh(new THREE.TubeGeometry(cordCurveR, 20, 1.6, 8, false), matButton);
+    layerGroups.cardboard_back.add(cordR);
+
+    // --- EXPLODED ANIMATION SYSTEM ---
+    const explodeOffsets = {
+      cardboard_front: +75,
+      sb1:             +45,
+      sb2:             +12,
+      sb3:             -20,
+      cardboard_back:  -60
+    };
+
+    const explodeRange = document.getElementById('explode-range');
+    const explodeDisplay = document.getElementById('explode-display');
+
+    explodeRange.addEventListener('input', (e) => {
+      const f = parseFloat(e.target.value) / 100.0;
+      explodeDisplay.textContent = Math.round(f * 75) + ' mm';
+      for (const [key, grp] of Object.entries(layerGroups)) {
+        grp.position.z = explodeOffsets[key] * f;
+      }
+    });
+
+    function focusLayer(name) {
+      document.querySelectorAll('.btn-layer').forEach(b => b.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      if (name === 'all') {
+        Object.values(layerGroups).forEach(g => g.visible = true);
+      } else {
+        Object.keys(layerGroups).forEach(k => {
+          layerGroups[k].visible = (k === name);
+        });
+      }
+    }
+
+    // --- INTERACTIVE DUAL BUTTON LOGIC ---
+    let isPowerOn = true;
+    let isRecording = false;
+
+    function togglePowerSwitch() {
+      isPowerOn = !isPowerOn;
+      const swBtn = document.getElementById('pwr-switch-btn');
+      const swText = document.getElementById('pwr-status-text');
+      const ledDot = document.getElementById('sim-led');
+      const recText = document.getElementById('record-status-text');
+      const pushBtn = document.getElementById('push-btn');
+
+      if (isPowerOn) {
+        swBtn.classList.add('on');
+        swText.innerHTML = '<span style="color:#22c55e; font-weight:700;">State: ON (Power Active)</span>';
+        swKnobMesh.position.x = 2.5; // slide right to ON
+        ledDot.classList.add('active');
+        matLED.emissive.setHex(0x00aacc);
+        matLED.emissiveIntensity = 0.8;
+        recText.textContent = 'Ready for trigger';
+        pushBtn.disabled = false;
+        pushBtn.style.opacity = '1';
+      } else {
+        swBtn.classList.remove('on');
+        swText.innerHTML = '<span style="color:#ef4444; font-weight:700;">State: OFF (Circuit Open)</span>';
+        swKnobMesh.position.x = -2.5; // slide left to OFF
+        ledDot.classList.remove('active');
+        matLED.emissive.setHex(0x000000);
+        matLED.emissiveIntensity = 0.0;
+        recText.textContent = 'Power is OFF';
+        pushBtn.disabled = true;
+        pushBtn.style.opacity = '0.5';
+        isRecording = false;
+        btnMesh.position.z = Z_FRONT_CARD + 2.5;
+      }
+    }
+
+    function triggerPushAction() {
+      if (!isPowerOn) return;
+      isRecording = !isRecording;
+      const ledDot = document.getElementById('sim-led');
+      const recText = document.getElementById('record-status-text');
+
+      if (isRecording) {
+        recText.innerHTML = '<span style="color:#00e5ff; font-weight:700;">● RECORDING AUDIO (LED PULSING)</span>';
+        matLED.emissive.setHex(0x00ffff);
+        matLED.emissiveIntensity = 3.0;
+        btnMesh.position.z = Z_FRONT_CARD + 1.2; // depressed
+      } else {
+        recText.textContent = 'Ready for trigger';
+        matLED.emissive.setHex(0x00aacc);
+        matLED.emissiveIntensity = 0.8;
+        btnMesh.position.z = Z_FRONT_CARD + 2.5; // released
+      }
+    }
+
+    function setCam(mode) {
+      controls.reset();
+      switch (mode) {
+        case 'front': camera.position.set(0, 0, 190); controls.target.set(0, 0, 0); break;
+        case 'side':  camera.position.set(190, 0, 0); controls.target.set(0, 0, 0); break;
+        case 'back':  camera.position.set(0, 0, -190); controls.target.set(0, 0, 0); break;
+        case 'top':   camera.position.set(0, 190, 0.1); controls.target.set(0, 0, 0); break;
+        case 'iso':   camera.position.set(125, 90, 175); controls.target.set(0, 0, 0); break;
+      }
+      controls.update();
+    }
+
+    function resetAll() {
+      setCam('iso');
+      explodeRange.value = 0;
+      explodeDisplay.textContent = '0 mm';
+      for (const [key, grp] of Object.entries(layerGroups)) {
+        grp.position.z = 0;
+        grp.visible = true;
+      }
+      document.querySelectorAll('.btn-layer').forEach((b, i) => {
+        b.classList.toggle('active', i === 0);
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function renderLoop() {
+      requestAnimationFrame(renderLoop);
+      controls.update();
+      if (isPowerOn && isRecording) {
+        matLED.emissiveIntensity = 2.4 + Math.sin(Date.now() * 0.01) * 0.8;
+      }
+      renderer.render(scene, camera);
+    }
+    renderLoop();
+  </script>
+</body>
+</html>
