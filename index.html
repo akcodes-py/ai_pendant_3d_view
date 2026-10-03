@@ -878,17 +878,22 @@
 
       <div style="height:1px; background:var(--panel-border); margin:8px 0;"></div>
 
-      <!-- 2. Voice Push Button + Blue LED -->
+      <!-- 2. Privacy Mute Push Button + Blue LED -->
       <div class="sim-row">
         <div style="display:flex; align-items:center; gap:8px;">
           <div class="led-indicator-dot active" id="sim-led-desktop"></div>
           <div>
-            <div style="font-size:0.75rem; font-weight:700; color:var(--text);">2. Voice Record Button</div>
-            <div style="font-size:0.68rem; color:var(--accent);" id="record-status-text-desktop">Ready for trigger</div>
+            <div style="font-size:0.75rem; font-weight:700; color:var(--text);">2. Privacy Push Button</div>
+            <div style="font-size:0.68rem; color:var(--accent);" id="record-status-text-desktop">● RECORDING ACTIVE (Mic Listening)</div>
           </div>
         </div>
-        <button class="btn-push-ui" id="push-btn-desktop" onclick="triggerPushAction()" aria-label="Push Voice Recording Button">
-          🎙️ PUSH
+        <button class="btn-push-ui" id="push-btn-desktop" 
+          onpointerdown="startPrivacyMute(event)" 
+          onpointerup="endPrivacyMute(event)" 
+          onpointerleave="endPrivacyMute(event)" 
+          onclick="togglePrivacyMute(event)" 
+          aria-label="Hold to Mute Mic, Release to Record">
+          🛑 PUSH TO MUTE
         </button>
       </div>
     </div>
@@ -1909,7 +1914,7 @@
             if (hit.userData.partName === 'White Power Switch Plunger') {
               togglePowerSwitch();
             } else if (hit.userData.partName === 'Voice Record Push Button') {
-              triggerPushAction();
+              togglePrivacyMute();
             } else {
               if (window.innerWidth <= 1024) {
                 openDrawer('details');
@@ -1932,8 +1937,12 @@
     window.addEventListener('touchend', handlePointerUp, { passive: true });
 
     // --- HARDWARE SWITCHES SIMULATOR LOGIC ---
+    // Continuous recording by default (ambient listening).
+    // Push button acts as Privacy Mute: press/hold to mute, release/remove hand to resume recording!
     let isPowerOn = true;
-    let isRecording = false;
+    let isRecording = true; // Ambient listening active by default!
+    let isMuted = false;
+    let isPointerHolding = false;
 
     function playClickSound(freq = 600) {
       try {
@@ -1952,6 +1961,72 @@
       } catch (e) {}
     }
 
+    function updateRecordingUI() {
+      ['desktop', 'mobile'].forEach(suffix => {
+        const recText = document.getElementById(`record-status-text-${suffix}`);
+        const pushBtn = document.getElementById(`push-btn-${suffix}`);
+        const ledDot = document.getElementById(`sim-led-${suffix}`);
+
+        if (!isPowerOn) {
+          if (recText) recText.innerHTML = '<span style="color:var(--muted);">Power is OFF</span>';
+          if (ledDot) {
+            ledDot.classList.remove('active');
+            ledDot.style.background = '#334155';
+            ledDot.style.boxShadow = 'none';
+          }
+          if (pushBtn) {
+            pushBtn.disabled = true;
+            pushBtn.style.opacity = '0.5';
+            pushBtn.innerHTML = '🎙️ PUSH';
+          }
+          return;
+        }
+
+        if (pushBtn) {
+          pushBtn.disabled = false;
+          pushBtn.style.opacity = '1';
+        }
+
+        if (isMuted) {
+          // MUTED: Hand on button or muted for privacy
+          if (recText) {
+            recText.innerHTML = '<span style="color:#ef4444; font-weight:700;">🔇 PRIVACY MUTED (Mic OFF)</span>';
+          }
+          if (ledDot) {
+            ledDot.classList.remove('active');
+            ledDot.style.background = '#ef4444';
+            ledDot.style.boxShadow = '0 0 10px #ef4444';
+          }
+          if (pushBtn) {
+            pushBtn.innerHTML = '🔇 MUTED (Release to Rec)';
+            pushBtn.style.borderColor = '#ef4444';
+            pushBtn.style.background = 'rgba(239, 68, 68, 0.2)';
+          }
+          btnMesh.position.z = Z_FRONT_CARD + 1.2; // depressed into housing
+          matLED.emissive.setHex(0x000000);
+          matLED.emissiveIntensity = 0.0;
+        } else {
+          // ACTIVE RECORDING: Continuous listening (hand removed)
+          if (recText) {
+            recText.innerHTML = '<span style="color:#00e5ff; font-weight:700;">● RECORDING ACTIVE (Mic Listening)</span>';
+          }
+          if (ledDot) {
+            ledDot.classList.add('active');
+            ledDot.style.background = '#00e5ff';
+            ledDot.style.boxShadow = '0 0 14px #00e5ff, 0 0 24px #00e5ff';
+          }
+          if (pushBtn) {
+            pushBtn.innerHTML = '🛑 PUSH TO MUTE';
+            pushBtn.style.borderColor = 'var(--panel-border)';
+            pushBtn.style.background = 'var(--choice-btn-bg)';
+          }
+          btnMesh.position.z = Z_FRONT_CARD + 2.5; // released/up
+          matLED.emissive.setHex(0x00aacc);
+          matLED.emissiveIntensity = 1.0;
+        }
+      });
+    }
+
     function togglePowerSwitch() {
       isPowerOn = !isPowerOn;
       playClickSound(isPowerOn ? 750 : 380);
@@ -1964,9 +2039,6 @@
         const pwrBtn = document.getElementById(`pwr-clicky-btn-${suffix}`);
         const pwrTxt = document.getElementById(`clicky-text-${suffix}`);
         const pwrStatus = document.getElementById(`pwr-status-text-${suffix}`);
-        const ledDot = document.getElementById(`sim-led-${suffix}`);
-        const recText = document.getElementById(`record-status-text-${suffix}`);
-        const pushBtn = document.getElementById(`push-btn-${suffix}`);
 
         if (pwrBtn) pwrBtn.classList.toggle('latched', isPowerOn);
         if (pwrTxt) pwrTxt.textContent = clickyText;
@@ -1974,50 +2046,50 @@
           pwrStatus.textContent = statusText;
           pwrStatus.style.color = statusColor;
         }
-        if (ledDot) ledDot.classList.toggle('active', isPowerOn);
-        if (recText) recText.textContent = isPowerOn ? 'Ready for trigger' : 'Power is OFF';
-        if (pushBtn) {
-          pushBtn.disabled = !isPowerOn;
-          pushBtn.style.opacity = isPowerOn ? '1' : '0.5';
-        }
       });
 
       if (isPowerOn) {
-        whitePlungerMesh.position.z = Z_FRONT_CARD + 1.6;
-        matLED.emissive.setHex(0x00aacc);
-        matLED.emissiveIntensity = 0.8;
+        whitePlungerMesh.position.z = Z_FRONT_CARD + 1.6; // Latched down
+        isMuted = false;
+        isRecording = true;
       } else {
-        whitePlungerMesh.position.z = Z_FRONT_CARD + 3.4;
-        matLED.emissive.setHex(0x000000);
-        matLED.emissiveIntensity = 0.0;
+        whitePlungerMesh.position.z = Z_FRONT_CARD + 3.4; // Sprung up
         isRecording = false;
-        btnMesh.position.z = Z_FRONT_CARD + 2.5;
+        isMuted = false;
       }
+      updateRecordingUI();
     }
 
-    function triggerPushAction() {
+    // Push down button -> Mutes recording for privacy
+    function startPrivacyMute(e) {
+      if (e) e.stopPropagation();
       if (!isPowerOn) return;
-      isRecording = !isRecording;
+      isPointerHolding = true;
+      isMuted = true;
+      isRecording = false;
+      playClickSound(420);
+      updateRecordingUI();
+    }
+
+    // Release / Remove hand -> Recording started immediately!
+    function endPrivacyMute(e) {
+      if (e) e.stopPropagation();
+      if (!isPowerOn || !isPointerHolding) return;
+      isPointerHolding = false;
+      isMuted = false;
+      isRecording = true;
       playClickSound(880);
+      updateRecordingUI();
+    }
 
-      ['desktop', 'mobile'].forEach(suffix => {
-        const recText = document.getElementById(`record-status-text-${suffix}`);
-        if (recText) {
-          recText.innerHTML = isRecording 
-            ? '<span style="color:#00e5ff; font-weight:700;">● RECORDING AUDIO</span>'
-            : 'Ready for trigger';
-        }
-      });
-
-      if (isRecording) {
-        matLED.emissive.setHex(0x00ffff);
-        matLED.emissiveIntensity = 3.0;
-        btnMesh.position.z = Z_FRONT_CARD + 1.2;
-      } else {
-        matLED.emissive.setHex(0x00aacc);
-        matLED.emissiveIntensity = 0.8;
-        btnMesh.position.z = Z_FRONT_CARD + 2.5;
-      }
+    // Toggle on quick click / tap
+    function togglePrivacyMute(e) {
+      if (e) e.stopPropagation();
+      if (!isPowerOn) return;
+      isMuted = !isMuted;
+      isRecording = !isMuted;
+      playClickSound(isMuted ? 420 : 880);
+      updateRecordingUI();
     }
 
     function setCam(mode) {
@@ -2072,16 +2144,22 @@
             <div style="height:1px; background:var(--panel-border); margin:12px 0;"></div>
             <div class="sim-row">
               <div style="display:flex; align-items:center; gap:8px;">
-                <div class="led-indicator-dot ${isPowerOn ? 'active' : ''}" id="sim-led-mobile"></div>
+                <div class="led-indicator-dot ${isPowerOn ? (isMuted ? '' : 'active') : ''}" id="sim-led-mobile" style="${isMuted ? 'background:#ef4444; box-shadow:0 0 10px #ef4444;' : ''}"></div>
                 <div>
-                  <div style="font-size:0.8rem; font-weight:700; color:var(--text);">2. Voice Record Button</div>
+                  <div style="font-size:0.8rem; font-weight:700; color:var(--text);">2. Privacy Push Button</div>
                   <div style="font-size:0.72rem; color:var(--accent);" id="record-status-text-mobile">
-                    ${isRecording ? '<span style="color:#00e5ff; font-weight:700;">● RECORDING AUDIO</span>' : (isPowerOn ? 'Ready for trigger' : 'Power is OFF')}
+                    ${!isPowerOn ? 'Power is OFF' : (isMuted ? '<span style="color:#ef4444; font-weight:700;">🔇 PRIVACY MUTED</span>' : '<span style="color:#00e5ff; font-weight:700;">● RECORDING ACTIVE</span>')}
                   </div>
                 </div>
               </div>
-              <button class="btn-push-ui" id="push-btn-mobile" onclick="triggerPushAction()" ${!isPowerOn ? 'disabled style="opacity:0.5;"' : ''} aria-label="Push Voice Recording Button">
-                🎙️ PUSH
+              <button class="btn-push-ui" id="push-btn-mobile" 
+                onpointerdown="startPrivacyMute(event)" 
+                onpointerup="endPrivacyMute(event)" 
+                onpointerleave="endPrivacyMute(event)" 
+                onclick="togglePrivacyMute(event)" 
+                ${!isPowerOn ? 'disabled style="opacity:0.5;"' : ''} 
+                aria-label="Hold to Mute Mic, Release to Record">
+                ${isMuted ? '🔇 MUTED (Release to Rec)' : '🛑 PUSH TO MUTE'}
               </button>
             </div>
           </div>
@@ -2149,8 +2227,8 @@
     function renderLoop() {
       requestAnimationFrame(renderLoop);
       controls.update();
-      if (isPowerOn && isRecording) {
-        matLED.emissiveIntensity = 2.4 + Math.sin(Date.now() * 0.01) * 0.8;
+      if (isPowerOn && isRecording && !isMuted) {
+        matLED.emissiveIntensity = 1.6 + Math.sin(Date.now() * 0.006) * 0.6;
       }
       renderer.render(scene, camera);
     }
@@ -2166,6 +2244,7 @@
     initTheme();
     selectNode('01');
     setViewMode('earlier');
+    updateRecordingUI();
   </script>
 </body>
 </html>
