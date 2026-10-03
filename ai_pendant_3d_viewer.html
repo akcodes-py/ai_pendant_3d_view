@@ -2,34 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Brain2 Wearable AI Pendant - 3D CAD & Electronics Viewer</title>
-  <meta name="description" content="Interactive 3D CAD & Electronics Viewer for the Brain2 Wearable AI Pendant. Features assembled solid view, transparent X-ray internal view, layer-by-layer exploded stack, and FreeCAD Model Tree layer visibility toggles.">
+  <meta name="description" content="Interactive 3D CAD & Electronics Viewer for the Brain2 Wearable AI Pendant. Mobile and desktop compatible. Complete solid product view, transparent X-ray, exploded stack, and FreeCAD Model Tree.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #070b14;
-      --panel-bg: rgba(13, 20, 36, 0.90);
-      --panel-border: rgba(56, 189, 248, 0.22);
+      --panel-bg: rgba(13, 20, 36, 0.92);
+      --panel-border: rgba(56, 189, 248, 0.25);
       --accent: #38bdf8;
       --accent-glow: rgba(56, 189, 248, 0.35);
       --text: #f1f5f9;
       --muted: #94a3b8;
-      --starboard-green: #15803d;
-      --esp-blue: #1e40af;
-      --latch-white: #f8fafc;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
       background-color: var(--bg);
       color: var(--text);
       font-family: 'Plus Jakarta Sans', sans-serif;
       overflow: hidden;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       user-select: none;
+      touch-action: none;
     }
     #canvas-container {
       width: 100%;
@@ -38,46 +37,67 @@
       top: 0;
       left: 0;
       z-index: 1;
+      touch-action: none;
     }
-    
-    /* Dual Choice Top Bar */
-    .top-choice-bar {
+
+    /* TOP CHOICE BAR (Desktop & Mobile Scrollable) */
+    .top-choice-bar-container {
       position: absolute;
-      top: 14px;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 12px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
       z-index: 20;
+      pointer-events: none;
+      padding: 0 10px;
+    }
+    .top-choice-bar {
+      pointer-events: auto;
       background: rgba(13, 20, 36, 0.95);
       backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(56, 189, 248, 0.35);
       border-radius: 40px;
-      padding: 6px 10px;
+      padding: 5px 8px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.2);
+      gap: 5px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65), 0 0 18px rgba(56, 189, 248, 0.2);
+      max-width: 96vw;
+      overflow-x: auto;
+      scrollbar-width: none;
+      white-space: nowrap;
     }
+    .top-choice-bar::-webkit-scrollbar { display: none; }
+
     .choice-label {
-      font-size: 0.72rem;
-      font-weight: 700;
+      font-size: 0.70rem;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--muted);
-      padding: 0 8px;
+      padding: 0 6px;
+      display: none;
     }
+    @media (min-width: 640px) {
+      .choice-label { display: inline-block; }
+    }
+
     .choice-btn {
       background: #151f30;
       border: 1px solid #26354a;
       color: #cbd5e1;
-      padding: 8px 14px;
+      padding: 7px 12px;
       border-radius: 20px;
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       transition: all 0.2s ease;
+      flex-shrink: 0;
     }
     .choice-btn:hover {
       border-color: var(--accent);
@@ -91,31 +111,34 @@
       box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
     }
 
-    /* Floating UI Panels */
+    /* FLOATING DESKTOP PANELS */
     .ui-panel {
       position: absolute;
       z-index: 10;
       background: var(--panel-bg);
-      backdrop-filter: blur(14px);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--panel-border);
       border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
-      transition: all 0.25s ease;
+      padding: 14px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
     }
     
     #left-panel {
-      top: 75px;
-      left: 18px;
-      width: 360px;
-      max-height: calc(100vh - 95px);
+      top: 68px;
+      left: 16px;
+      width: 350px;
+      max-height: calc(100vh - 85px);
+      max-height: calc(100dvh - 85px);
       overflow-y: auto;
     }
     #details-panel {
-      top: 14px;
-      right: 18px;
-      width: 380px;
-      max-height: calc(100vh - 35px);
+      top: 68px;
+      right: 16px;
+      width: 360px;
+      max-height: calc(100vh - 85px);
+      max-height: calc(100dvh - 85px);
       overflow-y: auto;
     }
 
@@ -123,17 +146,17 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .panel-header h2 {
-      font-size: 0.95rem;
+      font-size: 0.90rem;
       font-weight: 800;
       color: #fff;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .badge-tag {
       font-size: 0.65rem;
@@ -147,29 +170,29 @@
     }
 
     .section-title {
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--muted);
-      margin: 12px 0 8px 0;
+      margin: 10px 0 6px 0;
       font-weight: 700;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    /* FreeCAD Model Tree in Photo */
+    /* FreeCAD Model Tree (Matching User's Photo!) */
     .cad-tree {
       background: #0b1120;
       border: 1px solid #1e293b;
       border-radius: 10px;
       overflow: hidden;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
     .tree-root-item {
       background: #111c30;
-      padding: 8px 12px;
-      font-size: 0.8rem;
+      padding: 7px 10px;
+      font-size: 0.78rem;
       font-weight: 800;
       color: #e2e8f0;
       border-bottom: 1px solid #1e293b;
@@ -200,45 +223,46 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 7px 10px;
+      padding: 6px 8px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      font-size: 0.75rem;
+      font-size: 0.73rem;
       color: #cbd5e1;
       cursor: pointer;
       transition: background 0.15s;
     }
     .tree-node:hover {
-      background: rgba(56, 189, 248, 0.1);
+      background: rgba(56, 189, 248, 0.12);
     }
     .tree-node.selected {
-      background: rgba(56, 189, 248, 0.2);
+      background: rgba(56, 189, 248, 0.22);
       border-left: 3px solid var(--accent);
     }
     .tree-node-left {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
+      font-size: 0.70rem;
     }
     .tree-icon {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
     .tree-eye {
-      width: 26px;
-      height: 24px;
+      width: 28px;
+      height: 26px;
       background: #1e293b;
       border: 1px solid #334155;
-      border-radius: 4px;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       font-size: 0.78rem;
       transition: all 0.15s;
+      flex-shrink: 0;
     }
     .tree-eye:hover {
       background: #334155;
@@ -252,15 +276,15 @@
     /* Slider Box */
     .slider-box {
       background: rgba(15, 23, 42, 0.7);
-      padding: 10px 12px;
+      padding: 9px 12px;
       border-radius: 10px;
       border: 1px solid #1e293b;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .slider-header {
       display: flex;
       justify-content: space-between;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       margin-bottom: 6px;
     }
     .slider-header span.val {
@@ -278,8 +302,8 @@
     }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       background: #0284c7;
       cursor: pointer;
@@ -291,18 +315,14 @@
     .controls-sim-box {
       background: linear-gradient(135deg, #182234, #0f172a);
       border: 1px solid rgba(56, 189, 248, 0.25);
-      padding: 12px;
+      padding: 10px 12px;
       border-radius: 12px;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
     .sim-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    .sim-row:last-child {
-      margin-bottom: 0;
     }
     .btn-clicky-ui {
       background: #f8fafc;
@@ -310,7 +330,7 @@
       color: #0f172a;
       padding: 6px 14px;
       border-radius: 6px;
-      font-size: 0.76rem;
+      font-size: 0.75rem;
       font-weight: 800;
       cursor: pointer;
       display: flex;
@@ -332,7 +352,7 @@
       color: #f1f5f9;
       padding: 6px 14px;
       border-radius: 8px;
-      font-size: 0.76rem;
+      font-size: 0.75rem;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.15s;
@@ -351,6 +371,7 @@
       background: #0369a1;
       border: 2px solid #38bdf8;
       transition: all 0.2s;
+      flex-shrink: 0;
     }
     .led-indicator-dot.active {
       background: #00e5ff;
@@ -362,7 +383,7 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 5px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     button.btn-camera {
       background: #1e293b;
@@ -370,7 +391,7 @@
       color: #cbd5e1;
       padding: 6px 2px;
       border-radius: 6px;
-      font-size: 0.72rem;
+      font-size: 0.70rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s;
@@ -385,38 +406,38 @@
       background: #0d1527;
       border: 1px solid #1e2e4a;
       border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 12px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
     }
     .comp-info-card h3 {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 800;
       color: #fff;
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .comp-info-card p {
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       color: #94a3b8;
-      line-height: 1.45;
-      margin-bottom: 8px;
+      line-height: 1.4;
+      margin-bottom: 6px;
     }
     table.specs-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.74rem;
-      margin-bottom: 8px;
+      font-size: 0.72rem;
+      margin-bottom: 6px;
     }
     table.specs-table th {
       text-align: left;
       color: var(--muted);
-      padding: 5px 4px;
+      padding: 4px 2px;
       border-bottom: 1px solid #1e293b;
     }
     table.specs-table td {
-      padding: 5px 4px;
+      padding: 4px 2px;
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     .val-dim {
@@ -425,23 +446,158 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Bottom Status Pill */
-    .bottom-pill {
+    /* Tap Hint Banner */
+    .tap-hint-pill {
       position: absolute;
-      bottom: 14px;
+      top: 58px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 10;
-      background: rgba(15, 23, 42, 0.92);
-      border: 1px solid #334155;
-      border-radius: 30px;
-      padding: 6px 18px;
-      font-size: 0.75rem;
+      z-index: 15;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.68rem;
+      color: #94a3b8;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+    .tap-hint-pill b { color: var(--accent); }
+
+    /* SMARTPHONE MOBILE BOTTOM BAR & DRAWER SYSTEM */
+    .mobile-bottom-bar {
+      display: none;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(10, 16, 28, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(56, 189, 248, 0.25);
+      z-index: 30;
+      padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)) 4px;
+      justify-content: space-around;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.6);
+    }
+    .mobile-nav-btn {
+      background: transparent;
+      border: none;
       color: #94a3b8;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      justify-content: center;
+      font-size: 0.64rem;
+      font-weight: 700;
+      cursor: pointer;
+      gap: 3px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      transition: all 0.2s;
+      min-width: 60px;
+    }
+    .mobile-nav-btn span.icon {
+      font-size: 1.15rem;
+    }
+    .mobile-nav-btn.active {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    /* Mobile Drawer Sheet */
+    .mobile-drawer-overlay {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 35;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .mobile-drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .mobile-drawer {
+      display: none;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      max-height: 72vh;
+      max-height: 72dvh;
+      background: rgba(13, 20, 36, 0.98);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 20px 20px 0 0;
+      z-index: 40;
+      padding: 12px 16px calc(20px + env(safe-area-inset-bottom, 0px)) 16px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow-y: auto;
+      box-shadow: 0 -12px 40px rgba(0,0,0,0.8);
+    }
+    .mobile-drawer.open {
+      transform: translateY(0);
+    }
+    .drawer-drag-handle {
+      width: 44px;
+      height: 5px;
+      background: #334155;
+      border-radius: 4px;
+      margin: 0 auto 12px auto;
+    }
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .drawer-close-btn {
+      background: #1e293b;
+      border: none;
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* RESPONSIVE MEDIA QUERIES FOR SMARTPHONES & TABLETS */
+    @media (max-width: 1024px), (max-height: 580px) {
+      #left-panel, #details-panel {
+        display: none !important;
+      }
+      .mobile-bottom-bar {
+        display: flex !important;
+      }
+      .mobile-drawer-overlay, .mobile-drawer {
+        display: block !important;
+      }
+      .top-choice-bar-container {
+        top: 6px !important;
+      }
+      .tap-hint-pill {
+        top: 50px !important;
+        font-size: 0.64rem;
+        padding: 3px 10px;
+      }
+      .desktop-bottom-pill {
+        display: none !important;
+      }
     }
     .status-dot {
       width: 8px;
@@ -463,24 +619,31 @@
 <body>
   <div id="canvas-container"></div>
 
-  <!-- CHOICE BAR: Both Ways as Requested! -->
-  <div class="top-choice-bar">
-    <span class="choice-label">View Choice:</span>
-    <button class="choice-btn" id="btn-choice-earlier" onclick="setViewMode('earlier')">
-      <span>📦</span> Earlier View (Solid Enclosure)
-    </button>
-    <button class="choice-btn" id="btn-choice-xray" onclick="setViewMode('xray')">
-      <span>🔮</span> Internal X-Ray (Translucent)
-    </button>
-    <button class="choice-btn active" id="btn-choice-tree" onclick="setViewMode('tree')">
-      <span>📁</span> Model Tree (As in Photo)
-    </button>
-    <button class="choice-btn" id="btn-choice-exploded" onclick="setViewMode('exploded')">
-      <span>💥</span> Exploded Stack
-    </button>
+  <!-- TAP HINT -->
+  <div class="tap-hint-pill" id="tap-hint">
+    <span>👆 <b>Tap any part</b> on the 3D pendant to inspect or operate!</span>
   </div>
 
-  <!-- LEFT CONTROL & MODEL TREE PANEL -->
+  <!-- CHOICE BAR: Earlier View (Complete Product) is DEFAULT FIRST! -->
+  <div class="top-choice-bar-container">
+    <div class="top-choice-bar">
+      <span class="choice-label">View:</span>
+      <button class="choice-btn active" id="btn-choice-earlier" onclick="setViewMode('earlier')">
+        <span>📦</span> Assembled Product
+      </button>
+      <button class="choice-btn" id="btn-choice-xray" onclick="setViewMode('xray')">
+        <span>🔮</span> Internal X-Ray
+      </button>
+      <button class="choice-btn" id="btn-choice-tree" onclick="setViewMode('tree')">
+        <span>📁</span> Model Tree
+      </button>
+      <button class="choice-btn" id="btn-choice-exploded" onclick="setViewMode('exploded')">
+        <span>💥</span> Exploded Stack
+      </button>
+    </div>
+  </div>
+
+  <!-- DESKTOP LEFT CONTROL & MODEL TREE PANEL -->
   <div class="ui-panel" id="left-panel">
     <div class="panel-header">
       <h2><span>💎</span> Brain2 AI Pendant CAD</h2>
@@ -496,83 +659,8 @@
       </div>
     </div>
     
-    <div class="cad-tree" id="model-tree">
-      <div class="tree-root-item">
-        <span>📄 ai_pendant_mvp</span>
-        <span style="font-size:0.68rem; color:#38bdf8;">Octagonal 62×90×38mm</span>
-      </div>
-
-      <!-- Node 01 -->
-      <div class="tree-node" id="node-01" onclick="selectNode('01')">
-        <div class="tree-node-left">
-          <span class="tree-icon">📁</span>
-          <span>_01_Front_Cardboard_Cover</span>
-        </div>
-        <div class="tree-eye" id="eye-01" onclick="toggleLayer('01', event)">👁️</div>
-      </div>
-
-      <!-- Node 02 -->
-      <div class="tree-node" id="node-02" onclick="selectNode('02')">
-        <div class="tree-node-left">
-          <span class="tree-icon">📁</span>
-          <span>_02_Front_Controls_Switches_LED</span>
-        </div>
-        <div class="tree-eye" id="eye-02" onclick="toggleLayer('02', event)">👁️</div>
-      </div>
-
-      <!-- Node 03 -->
-      <div class="tree-node" id="node-03" onclick="selectNode('03')">
-        <div class="tree-node-left">
-          <span class="tree-icon">📁</span>
-          <span>_03_Starboard_1_Upper_Mic_and_SD_Card</span>
-        </div>
-        <div class="tree-eye" id="eye-03" onclick="toggleLayer('03', event)">👁️</div>
-      </div>
-
-      <!-- Node 04 -->
-      <div class="tree-node" id="node-04" onclick="selectNode('04')">
-        <div class="tree-node-left">
-          <span class="tree-icon">📁</span>
-          <span>_04_Starboard_2_ESP32_DevKit</span>
-        </div>
-        <div class="tree-eye" id="eye-04" onclick="toggleLayer('04', event)">👁️</div>
-      </div>
-
-      <!-- Node 05 -->
-      <div class="tree-node" id="node-05" onclick="selectNode('05')">
-        <div class="tree-node-left">
-          <span class="tree-icon">📁</span>
-          <span>_05_Starboard_3_Power_and_Battery</span>
-        </div>
-        <div class="tree-eye" id="eye-05" onclick="toggleLayer('05', event)">👁️</div>
-      </div>
-
-      <!-- Node 06 -->
-      <div class="tree-node" id="node-06" onclick="selectNode('06')">
-        <div class="tree-node-left">
-          <span class="tree-icon">📁</span>
-          <span>_06_Perimeter_Cardboard_Walls</span>
-        </div>
-        <div class="tree-eye" id="eye-06" onclick="toggleLayer('06', event)">👁️</div>
-      </div>
-
-      <!-- Node 07 -->
-      <div class="tree-node" id="node-07" onclick="selectNode('07')">
-        <div class="tree-node-left">
-          <span class="tree-icon">📁</span>
-          <span>_07_Back_Cover_and_Lanyard</span>
-        </div>
-        <div class="tree-eye" id="eye-07" onclick="toggleLayer('07', event)">👁️</div>
-      </div>
-
-      <!-- Node 08 -->
-      <div class="tree-node" id="node-08" onclick="selectNode('08')">
-        <div class="tree-node-left">
-          <span class="tree-icon">📁</span>
-          <span>_08_Dimensions_and_Measurements</span>
-        </div>
-        <div class="tree-eye" id="eye-08" onclick="toggleLayer('08', event)">👁️</div>
-      </div>
+    <div class="cad-tree" id="model-tree-desktop">
+      <!-- Tree Nodes injected dynamically -->
     </div>
 
     <!-- Exploded Separation Slider -->
@@ -581,15 +669,15 @@
     </div>
     <div class="slider-box">
       <div class="slider-header">
-        <span>Z-Stack Explosion Offset:</span>
-        <span class="val" id="explode-display">0 mm</span>
+        <span>Z-Stack Separation:</span>
+        <span class="val" id="explode-display-desktop">0 mm</span>
       </div>
-      <input type="range" id="explode-range" min="0" max="100" value="0">
+      <input type="range" id="explode-range-desktop" min="0" max="100" value="0">
     </div>
 
-    <!-- Camera View Quick Buttons -->
+    <!-- Camera Angles -->
     <div class="section-title">
-      <span>Standard Camera Angles</span>
+      <span>Camera Angles</span>
     </div>
     <div class="btn-grid-4">
       <button class="btn-camera" onclick="setCam('iso')">Isometric</button>
@@ -604,51 +692,51 @@
     </div>
     <div class="controls-sim-box">
       <!-- 1. White Latching Power Switch -->
-      <div class="sim-row">
+      <div class="sim-row" style="margin-bottom:8px;">
         <div>
-          <div style="font-size:0.76rem; font-weight:700; color:#fff;">1. White Power Switch</div>
-          <div style="font-size:0.68rem; color:#94a3b8;" id="pwr-status-text">State: Latched ON</div>
+          <div style="font-size:0.75rem; font-weight:700; color:#fff;">1. White Power Switch</div>
+          <div style="font-size:0.68rem; color:#22c55e;" id="pwr-status-text-desktop">State: Latched ON</div>
         </div>
-        <button class="btn-clicky-ui latched" id="pwr-clicky-btn" onclick="togglePowerSwitch()">
-          <span>⚡</span> <span id="clicky-text">ON</span>
+        <button class="btn-clicky-ui latched" id="pwr-clicky-btn-desktop" onclick="togglePowerSwitch()">
+          <span>⚡</span> <span id="clicky-text-desktop">ON</span>
         </button>
       </div>
 
-      <div style="height:1px; background:#1e293b; margin:10px 0;"></div>
+      <div style="height:1px; background:#1e293b; margin:8px 0;"></div>
 
       <!-- 2. Voice Push Button + Blue LED -->
       <div class="sim-row">
         <div style="display:flex; align-items:center; gap:8px;">
-          <div class="led-indicator-dot active" id="sim-led"></div>
+          <div class="led-indicator-dot active" id="sim-led-desktop"></div>
           <div>
-            <div style="font-size:0.76rem; font-weight:700; color:#fff;">2. Voice Record Button</div>
-            <div style="font-size:0.68rem; color:#38bdf8;" id="record-status-text">Ready for trigger</div>
+            <div style="font-size:0.75rem; font-weight:700; color:#fff;">2. Voice Record Button</div>
+            <div style="font-size:0.68rem; color:#38bdf8;" id="record-status-text-desktop">Ready for trigger</div>
           </div>
         </div>
-        <button class="btn-push-ui" id="push-btn" onclick="triggerPushAction()">
+        <button class="btn-push-ui" id="push-btn-desktop" onclick="triggerPushAction()">
           🎙️ PUSH
         </button>
       </div>
     </div>
   </div>
 
-  <!-- RIGHT DETAILS & LAYER INSPECTOR PANEL -->
+  <!-- DESKTOP RIGHT DETAILS PANEL -->
   <div class="ui-panel" id="details-panel">
     <div class="panel-header">
-      <h2><span id="detail-title-icon">🔍</span> <span id="detail-title">Selected Component</span></h2>
-      <span class="badge-tag" id="detail-badge">Active</span>
+      <h2><span id="detail-title-icon-desktop">📦</span> <span id="detail-title-desktop">Complete Assembled Product</span></h2>
+      <span class="badge-tag" id="detail-badge-desktop">Active</span>
     </div>
 
-    <div class="comp-info-card" id="detail-card">
-      <h3 id="card-heading">3-Tier Modular Starboard AI Pendant</h3>
-      <p id="card-desc">Click on any layer node in the FreeCAD Model Tree to view detailed physical dimensions, wiring paths, and placement specs.</p>
+    <div class="comp-info-card">
+      <h3 id="card-heading-desktop">Fully Assembled Physical Pendant</h3>
+      <p id="card-desc-desktop">Earlier solid exterior view showing the finished wearable pendant with front buttons, acoustic pinhole, blue LED, and side USB-C & MicroSD port cutouts.</p>
       
-      <table class="specs-table" id="card-table">
+      <table class="specs-table" id="card-table-desktop">
         <tr><th>Total Outer Dimensions</th><td class="val-dim">62 × 90 × 38 mm</td></tr>
-        <tr><th>Cardboard Wall Thickness</th><td class="val-dim">2.0 mm Octagonal Shell</td></tr>
-        <tr><th>3-Deck Internal Clearance</th><td class="val-dim">54 × 82 mm Perforated Starboards</td></tr>
+        <tr><th>Cardboard Enclosure</th><td class="val-dim">2.0 mm Octagonal Shell</td></tr>
+        <tr><th>Internal Architecture</th><td class="val-dim">3-Tier Stacked Starboards</td></tr>
         <tr><th>Upper Sound Pinhole</th><td class="val-dim">Ø 3.6 mm Acoustic Channel</td></tr>
-        <tr><th>Right Side Port Cutouts</th><td class="val-dim">USB-C 11×6mm & SD 14×6mm</td></tr>
+        <tr><th>Side Port Openings</th><td class="val-dim">USB-C 11×6mm & SD 14×6mm</td></tr>
       </table>
     </div>
 
@@ -657,27 +745,71 @@
       <span>Modular 3-Tier Layer Architecture</span>
     </div>
     
-    <div style="display:flex; flex-direction:column; gap:8px; font-size:0.74rem;">
-      <div style="background:#111b2e; padding:8px 10px; border-radius:8px; border-left:3px solid #38bdf8;">
-        <b style="color:#e2e8f0;">Layer 1 (Top Deck):</b> Upper INMP441 MEMS Mic, MicroSD Reader (SPI), White Latching Power Switch, Round Voice Push Button, 5mm Blue LED.
+    <div style="display:flex; flex-direction:column; gap:6px; font-size:0.72rem;">
+      <div style="background:#111b2e; padding:7px 9px; border-radius:8px; border-left:3px solid #38bdf8;">
+        <b style="color:#e2e8f0;">Deck 1 (Top):</b> Upper INMP441 MEMS Mic, MicroSD Reader, White Latching Power Switch, Voice Push Button, 5mm Blue LED.
       </div>
-      <div style="background:#111b2e; padding:8px 10px; border-radius:8px; border-left:3px solid #60a5fa;">
-        <b style="color:#e2e8f0;">Layer 2 (Middle Deck):</b> ESP32-S3 DevKit WROOM-1 (70×39×10mm) with dual 22-pin female socket headers for modular swapability.
+      <div style="background:#111b2e; padding:7px 9px; border-radius:8px; border-left:3px solid #60a5fa;">
+        <b style="color:#e2e8f0;">Deck 2 (Middle):</b> ESP32-S3 DevKit (70×39×10mm) on dual 22-pin socket headers.
       </div>
-      <div style="background:#111b2e; padding:8px 10px; border-radius:8px; border-left:3px solid #f59e0b;">
-        <b style="color:#e2e8f0;">Layer 3 (Power Deck):</b> 800mAh 3.7V Li-Po Battery, TP4056 USB-C 1A Charger, MT3608 5V Step-Up Boost Converter.
+      <div style="background:#111b2e; padding:7px 9px; border-radius:8px; border-left:3px solid #f59e0b;">
+        <b style="color:#e2e8f0;">Deck 3 (Bottom):</b> 800mAh Li-Po Battery, TP4056 Charger, MT3608 5V Booster.
       </div>
     </div>
   </div>
 
-  <!-- BOTTOM STATUS PILL -->
-  <div class="bottom-pill">
+  <!-- SMARTPHONE MOBILE BOTTOM NAVIGATION BAR -->
+  <div class="mobile-bottom-bar">
+    <button class="mobile-nav-btn" onclick="openDrawer('tree')">
+      <span class="icon">📁</span>
+      <span>Tree</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="openDrawer('controls')">
+      <span class="icon">⚡</span>
+      <span>Switches</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="openDrawer('explode')">
+      <span class="icon">💥</span>
+      <span>Explode</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="openDrawer('details')">
+      <span class="icon">🔍</span>
+      <span>Specs</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="setCam('iso')">
+      <span class="icon">🔄</span>
+      <span>Reset</span>
+    </button>
+  </div>
+
+  <!-- SMARTPHONE MOBILE DRAWER OVERLAY & BOTTOM SHEET -->
+  <div class="mobile-drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  
+  <div class="mobile-drawer" id="mobile-drawer">
+    <div class="drawer-drag-handle"></div>
+    <div class="drawer-header">
+      <h3 id="drawer-title" style="font-size:0.9rem; font-weight:800; display:flex; align-items:center; gap:6px;">
+        <span>📁</span> Model Tree
+      </h3>
+      <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
+    </div>
+
+    <!-- Drawer Dynamic Content -->
+    <div id="drawer-body">
+      <!-- Injected based on active tab -->
+    </div>
+  </div>
+
+  <!-- DESKTOP BOTTOM STATUS PILL -->
+  <div class="desktop-bottom-pill">
     <div class="status-dot"></div>
-    <span>Left Click + Drag: Rotate 3D</span>
+    <span>Drag: Rotate 3D</span>
     <span>•</span>
     <span>Scroll: Zoom</span>
     <span>•</span>
-    <span>Right Click: Pan</span>
+    <span>Right-Click: Pan</span>
+    <span>•</span>
+    <span>Click Any Part to Inspect</span>
   </div>
 
   <!-- THREE.JS 3D SCENE SCRIPT -->
@@ -685,24 +817,26 @@
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x070b14);
-    scene.fog = new THREE.FogExp2(0x070b14, 0.0018);
+    scene.fog = new THREE.FogExp2(0x070b14, 0.0016);
 
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
     camera.position.set(135, 105, 185);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Smooth on high-DPI phones
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
+    controls.dampingFactor = 0.06;
     controls.target.set(0, 0, 0);
+    controls.maxDistance = 450;
+    controls.minDistance = 40;
 
     // Lights
-    const amb = new THREE.AmbientLight(0xffffff, 0.8);
+    const amb = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(amb);
     const dir1 = new THREE.DirectionalLight(0xffffff, 0.95);
     dir1.position.set(120, 150, 100);
@@ -874,7 +1008,7 @@
     const matBat = new THREE.MeshStandardMaterial({ map: createBatteryTexture(), roughness: 0.3, metalness: 0.4 });
     const matMic = new THREE.MeshStandardMaterial({ map: createMicTexture(), roughness: 0.4 });
     
-    // Cardboard Solid and Glass Materials for Earlier View vs X-Ray View
+    // Solid cardboard (Earlier view) vs Transparent Glass (X-ray)
     const matCardboardSolid = new THREE.MeshStandardMaterial({ map: createCardboardTexture(), roughness: 0.85 });
     const matCardboardGlass = new THREE.MeshStandardMaterial({
       map: createCardboardTexture(),
@@ -940,11 +1074,19 @@
     const Z_SB3 = -11.0;
     const Z_BACK_CARD = -19.0;
 
+    // List of interactive meshes for raycasting tap selection
+    const interactiveMeshes = [];
+
+    function tagMesh(mesh, nodeId, partName) {
+      mesh.userData = { nodeId, partName };
+      interactiveMeshes.push(mesh);
+      return mesh;
+    }
+
     // ----------------------------------------------------
     // NODE 01: FRONT CARDBOARD COVER
     // ----------------------------------------------------
     const fShape = makeOctagon(PW, PH, 8);
-    // 4 Cutout Holes
     const hLED = new THREE.Path(); hLED.absarc(0, 22, 2.8, 0, Math.PI*2, true); fShape.holes.push(hLED);
     const hBTN = new THREE.Path(); hBTN.absarc(0, -2, 3.8, 0, Math.PI*2, true); fShape.holes.push(hBTN);
     const hSW  = new THREE.Path(); hSW.absarc(0, -23, 3.0, 0, Math.PI*2, true); fShape.holes.push(hSW);
@@ -952,31 +1094,31 @@
 
     const fMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(fShape, { depth: 2, bevelEnabled: false }), matCardboardSolid);
     fMesh.position.z = Z_FRONT_CARD;
+    tagMesh(fMesh, '01', 'Front Cardboard Cover');
     treeGroups['01'].add(fMesh);
 
     // ----------------------------------------------------
     // NODE 02: FRONT CONTROLS, SWITCHES & LED
     // ----------------------------------------------------
-    // 1. Blue LED Dome
     const ledMesh = new THREE.Mesh(new THREE.SphereGeometry(2.5, 24, 16, 0, Math.PI*2, 0, Math.PI/2), matLED);
     ledMesh.rotation.x = -Math.PI/2;
     ledMesh.position.set(0, 22, Z_FRONT_CARD + 2.5);
+    tagMesh(ledMesh, '02', '5mm Blue Status LED');
     treeGroups['02'].add(ledMesh);
 
-    // 2. Round Voice Push Button
     const btnMesh = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 3.0, 32), matButton);
     btnMesh.rotation.x = Math.PI/2;
     btnMesh.position.set(0, -2, Z_FRONT_CARD + 2.5);
+    tagMesh(btnMesh, '02', 'Voice Record Push Button');
     treeGroups['02'].add(btnMesh);
 
-    // 3. White Latching Push-Push Power Switch Plunger (Matching user's photo!)
     const whitePlungerGeom = new THREE.CylinderGeometry(1.9, 1.9, 4.0, 24);
     const whitePlungerMesh = new THREE.Mesh(whitePlungerGeom, matWhiteSwitch);
     whitePlungerMesh.rotation.x = Math.PI/2;
     whitePlungerMesh.position.set(0, -23, Z_FRONT_CARD + 1.6);
+    tagMesh(whitePlungerMesh, '02', 'White Power Switch Plunger');
     treeGroups['02'].add(whitePlungerMesh);
 
-    // 4. Mic Bezel Gold Ring
     const micRing = new THREE.Mesh(new THREE.RingGeometry(1.8, 2.8, 24), new THREE.MeshBasicMaterial({ color: 0xd97706, side: THREE.DoubleSide }));
     micRing.position.set(-16, 26, Z_FRONT_CARD + 2.05);
     treeGroups['02'].add(micRing);
@@ -987,32 +1129,32 @@
     const sb1Shape = makeOctagon(SW, SH, 6);
     const sb1Mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(sb1Shape, { depth: 1.6, bevelEnabled: false }), matStarboard);
     sb1Mesh.position.z = Z_SB1;
+    tagMesh(sb1Mesh, '03', 'Starboard 1 Top Deck');
     treeGroups['03'].add(sb1Mesh);
 
-    // INMP441 MEMS Microphone on UPPER SIDE (14 x 11 x 3.5 mm)
     const micMesh = new THREE.Mesh(new THREE.BoxGeometry(11, 14, 3.5), matMic);
     micMesh.position.set(-16, 26, Z_SB1 + 2.4);
+    tagMesh(micMesh, '03', 'INMP441 MEMS Microphone');
     treeGroups['03'].add(micMesh);
 
-    // MicroSD Card Adapter (50 x 25 x 10 mm)
     const sdMesh = new THREE.Mesh(new THREE.BoxGeometry(25, 50, 1.6), matSD);
     sdMesh.position.set(11, -8, Z_SB1 + 2.4);
+    tagMesh(sdMesh, '03', 'MicroSD Adapter Board');
     treeGroups['03'].add(sdMesh);
 
     const sdSlot = new THREE.Mesh(new THREE.BoxGeometry(16, 18, 2.8), matMetal);
     sdSlot.position.set(16, -18, Z_SB1 + 4.6);
+    tagMesh(sdSlot, '03', 'MicroSD Push-Push Card Socket');
     treeGroups['03'].add(sdSlot);
 
     const cardMesh = new THREE.Mesh(new THREE.BoxGeometry(11, 14, 1.0), matButton);
     cardMesh.position.set(16, -26, Z_SB1 + 4.6);
     treeGroups['03'].add(cardMesh);
 
-    // Voice Push button switch body
     const btnBase = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 4), matButton);
     btnBase.position.set(0, -2, Z_SB1 + 2.8);
     treeGroups['03'].add(btnBase);
 
-    // White Latching Switch base body & stepped collar (matching photo!)
     const swBaseMesh = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 3.2), matWhiteSwitch);
     swBaseMesh.position.set(0, -23, Z_SB1 + 2.4);
     treeGroups['03'].add(swBaseMesh);
@@ -1023,7 +1165,6 @@
     swCollarMesh.position.set(0, -23, Z_SB1 + 5.0);
     treeGroups['03'].add(swCollarMesh);
 
-    // Side solder tabs
     const tabGeom = new THREE.BoxGeometry(3.5, 1.2, 0.4);
     const tabLeft = new THREE.Mesh(tabGeom, matMetal);
     tabLeft.position.set(-5.75, -23, Z_SB1 + 1.8);
@@ -1031,7 +1172,6 @@
     tabRight.position.set(5.75, -23, Z_SB1 + 1.8);
     treeGroups['03'].add(tabLeft); treeGroups['03'].add(tabRight);
 
-    // 4 Corner Brass Standoffs (SB1 to SB2)
     const standoffGeom = new THREE.CylinderGeometry(1.5, 1.5, 8.4, 16);
     [[-22, -34], [22, -34], [-22, 34], [22, 34]].forEach(([sx, sy]) => {
       const so = new THREE.Mesh(standoffGeom, matBrassStandoff);
@@ -1046,14 +1186,17 @@
     const sb2Shape = makeOctagon(SW, SH, 6);
     const sb2Mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(sb2Shape, { depth: 1.6, bevelEnabled: false }), matStarboard);
     sb2Mesh.position.z = Z_SB2;
+    tagMesh(sb2Mesh, '04', 'Starboard 2 Middle Deck');
     treeGroups['04'].add(sb2Mesh);
 
     const espMesh = new THREE.Mesh(new THREE.BoxGeometry(39, 70, 1.6), matESP32);
     espMesh.position.set(0, 0, Z_SB2 + 2.4);
+    tagMesh(espMesh, '04', 'ESP32-S3 DevKit MCU');
     treeGroups['04'].add(espMesh);
 
     const rfMesh = new THREE.Mesh(new THREE.BoxGeometry(18, 25, 2.5), matMetal);
     rfMesh.position.set(0, 12, Z_SB2 + 4.4);
+    tagMesh(rfMesh, '04', 'Metal RF Shielding Can');
     treeGroups['04'].add(rfMesh);
 
     const usbMesh = new THREE.Mesh(new THREE.BoxGeometry(8, 7, 3.2), matMetal);
@@ -1066,7 +1209,6 @@
     hdr2.position.set(18, 0, Z_SB2 - 2.5);
     treeGroups['04'].add(hdr1); treeGroups['04'].add(hdr2);
 
-    // Standoffs SB2 to SB3
     [[-22, -34], [22, -34], [-22, 34], [22, 34]].forEach(([sx, sy]) => {
       const so = new THREE.Mesh(standoffGeom, matBrassStandoff);
       so.rotation.x = Math.PI/2;
@@ -1080,11 +1222,12 @@
     const sb3Shape = makeOctagon(SW, SH, 6);
     const sb3Mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(sb3Shape, { depth: 1.6, bevelEnabled: false }), matStarboard);
     sb3Mesh.position.z = Z_SB3;
+    tagMesh(sb3Mesh, '05', 'Starboard 3 Bottom Deck');
     treeGroups['05'].add(sb3Mesh);
 
-    // MT3608 Boost Converter (45 x 23 x 15 mm)
     const bstMesh = new THREE.Mesh(new THREE.BoxGeometry(23, 45, 1.6), matBooster);
     bstMesh.position.set(-12, 12, Z_SB3 + 2.4);
+    tagMesh(bstMesh, '05', 'MT3608 5V Booster');
     treeGroups['05'].add(bstMesh);
 
     const indMesh = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 5.5, 6.0, 20), matMetal);
@@ -1096,18 +1239,18 @@
     potMesh.position.set(-6, 20, Z_SB3 + 6.5);
     treeGroups['05'].add(potMesh);
 
-    // TP4056 Charger (30 x 18 x 3 mm)
     const tpMesh = new THREE.Mesh(new THREE.BoxGeometry(18, 30, 1.6), matTP);
     tpMesh.position.set(13, 16, Z_SB3 + 2.4);
+    tagMesh(tpMesh, '05', 'TP4056 USB-C Charger');
     treeGroups['05'].add(tpMesh);
 
     const tpUsb = new THREE.Mesh(new THREE.BoxGeometry(6, 9, 3.2), matMetal);
     tpUsb.position.set(22, 16, Z_SB3 + 2.8);
     treeGroups['05'].add(tpUsb);
 
-    // 800mAh LiPo Battery (37 x 25 x 5 mm)
     const batMesh = new THREE.Mesh(new THREE.BoxGeometry(25, 37, 5.0), matBat);
     batMesh.position.set(0, -18, Z_SB3 + 4.1);
+    tagMesh(batMesh, '05', '800mAh LiPo Battery');
     treeGroups['05'].add(batMesh);
 
     const wireRed = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 20), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
@@ -1135,9 +1278,9 @@
 
     const wallsMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(wOuter, { depth: PD - 4, bevelEnabled: false }), matCardboardEdgeSolid);
     wallsMesh.position.z = -PD/2 + 2;
+    tagMesh(wallsMesh, '06', 'Perimeter Cardboard Walls');
     treeGroups['06'].add(wallsMesh);
 
-    // Wall Port Cutouts
     const cutUSB = new THREE.Mesh(new THREE.BoxGeometry(4, 11, 6), new THREE.MeshBasicMaterial({ color: 0x0f172a }));
     cutUSB.position.set(PW/2 - 1, 16, Z_SB3 + 2.8);
     treeGroups['06'].add(cutUSB);
@@ -1152,6 +1295,7 @@
     const bShape = makeOctagon(PW, PH, 8);
     const bMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(bShape, { depth: 2, bevelEnabled: false }), matCardboardSolid);
     bMesh.position.z = Z_BACK_CARD;
+    tagMesh(bMesh, '07', 'Back Cardboard Cover');
     treeGroups['07'].add(bMesh);
 
     const bracket = new THREE.Mesh(new THREE.BoxGeometry(16, 6, 8), matButton);
@@ -1181,19 +1325,11 @@
       const geom = new THREE.BufferGeometry().setFromPoints([p1, p2]);
       return new THREE.Line(geom, matDimLine);
     }
-    // Width 62mm dimension line
     treeGroups['08'].add(createDimLine(new THREE.Vector3(-PW/2, -PH/2 - 8, 0), new THREE.Vector3(PW/2, -PH/2 - 8, 0)));
-    // Height 90mm dimension line
     treeGroups['08'].add(createDimLine(new THREE.Vector3(-PW/2 - 8, -PH/2, 0), new THREE.Vector3(-PW/2 - 8, PH/2, 0)));
-    // Depth 38mm dimension line
     treeGroups['08'].add(createDimLine(new THREE.Vector3(PW/2 + 8, PH/2, -PD/2), new THREE.Vector3(PW/2 + 8, PH/2, PD/2)));
-    // Corner ticks
-    treeGroups['08'].add(createDimLine(new THREE.Vector3(-PW/2, -PH/2 - 12, 0), new THREE.Vector3(-PW/2, -PH/2 - 4, 0)));
-    treeGroups['08'].add(createDimLine(new THREE.Vector3(PW/2, -PH/2 - 12, 0), new THREE.Vector3(PW/2, -PH/2 - 4, 0)));
-    treeGroups['08'].add(createDimLine(new THREE.Vector3(-PW/2 - 12, -PH/2, 0), new THREE.Vector3(-PW/2 - 4, -PH/2, 0)));
-    treeGroups['08'].add(createDimLine(new THREE.Vector3(-PW/2 - 12, PH/2, 0), new THREE.Vector3(-PW/2 - 4, PH/2, 0)));
 
-    // Vertical Exploded Stack Guide Line
+    // Vertical Stack Guide Line
     const stackGuideGeom = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(0, 0, -80),
       new THREE.Vector3(0, 0, 100)
@@ -1205,139 +1341,22 @@
 
     // EXPLODED OFFSETS PER NODE
     const explodeOffsets = {
-      '01': +85, // Front cardboard cover
-      '02': +75, // Controls
-      '03': +45, // SB1
-      '04': +10, // SB2 ESP32
-      '05': -25, // SB3 Power
-      '06': -45, // Walls
-      '07': -75, // Back cover
-      '08': 0    // Dimensions
+      '01': +85,
+      '02': +75,
+      '03': +45,
+      '04': +10,
+      '05': -25,
+      '06': -45,
+      '07': -75,
+      '08': 0
     };
 
-    // --- VIEW MODE SYSTEM (EARLIER SOLID vs X-RAY vs TREE vs EXPLODED) ---
-    let currentViewMode = 'tree';
-
-    function setViewMode(mode) {
-      currentViewMode = mode;
-      
-      document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
-      const activeBtn = document.getElementById('btn-choice-' + mode);
-      if (activeBtn) activeBtn.classList.add('active');
-
-      const explodeRange = document.getElementById('explode-range');
-      const explodeDisplay = document.getElementById('explode-display');
-
-      if (mode === 'earlier') {
-        // Earlier View: Solid Opaque Enclosure, Assembly closed
-        fMesh.material = matCardboardSolid;
-        wallsMesh.material = matCardboardEdgeSolid;
-        bMesh.material = matCardboardSolid;
-        explodeRange.value = 0;
-        explodeDisplay.textContent = '0 mm';
-        stackGuideLine.visible = false;
-        setExplosion(0);
-        toggleAllLayers(true);
-        updateDetailCard('earlier');
-      } else if (mode === 'xray') {
-        // Transparent Internal View: Translucent Shell, Inside boards visible
-        fMesh.material = matCardboardGlass;
-        wallsMesh.material = matCardboardEdgeGlass;
-        bMesh.material = matCardboardGlass;
-        explodeRange.value = 0;
-        explodeDisplay.textContent = '0 mm';
-        stackGuideLine.visible = false;
-        setExplosion(0);
-        toggleAllLayers(true);
-        updateDetailCard('xray');
-      } else if (mode === 'tree') {
-        // CAD Model Tree View (As in photo)
-        fMesh.material = matCardboardGlass;
-        wallsMesh.material = matCardboardEdgeGlass;
-        bMesh.material = matCardboardGlass;
-        explodeRange.value = 0;
-        explodeDisplay.textContent = '0 mm';
-        stackGuideLine.visible = false;
-        setExplosion(0);
-        updateDetailCard('tree');
-      } else if (mode === 'exploded') {
-        // Exploded View
-        fMesh.material = matCardboardSolid;
-        wallsMesh.material = matCardboardEdgeSolid;
-        bMesh.material = matCardboardSolid;
-        explodeRange.value = 75;
-        explodeDisplay.textContent = '75 mm';
-        stackGuideLine.visible = true;
-        setExplosion(0.75);
-        toggleAllLayers(true);
-        updateDetailCard('exploded');
-      }
-    }
-
-    function setExplosion(factor) {
-      for (const [key, grp] of Object.entries(treeGroups)) {
-        grp.position.z = explodeOffsets[key] * factor;
-      }
-    }
-
-    // Explode Slider Listener
-    const explodeRange = document.getElementById('explode-range');
-    const explodeDisplay = document.getElementById('explode-display');
-
-    explodeRange.addEventListener('input', (e) => {
-      const f = parseFloat(e.target.value) / 100.0;
-      explodeDisplay.textContent = Math.round(f * 100) + ' mm';
-      setExplosion(f);
-      stackGuideLine.visible = (f > 0.05);
-    });
-
-    // --- FREECAD TREE INTERACTION ---
-    const layerVisibility = {
-      '01': true,
-      '02': true,
-      '03': true,
-      '04': true,
-      '05': true,
-      '06': true,
-      '07': true,
-      '08': true
-    };
-
-    function toggleLayer(nodeId, event) {
-      if (event) event.stopPropagation();
-      layerVisibility[nodeId] = !layerVisibility[nodeId];
-      treeGroups[nodeId].visible = layerVisibility[nodeId];
-
-      const eyeEl = document.getElementById('eye-' + nodeId);
-      if (layerVisibility[nodeId]) {
-        eyeEl.textContent = '👁️';
-        eyeEl.classList.remove('hidden-eye');
-      } else {
-        eyeEl.textContent = '🚫';
-        eyeEl.classList.add('hidden-eye');
-      }
-    }
-
-    function toggleAllLayers(visibleState) {
-      Object.keys(layerVisibility).forEach(k => {
-        layerVisibility[k] = visibleState;
-        treeGroups[k].visible = visibleState;
-        const eyeEl = document.getElementById('eye-' + k);
-        if (visibleState) {
-          eyeEl.textContent = '👁️';
-          eyeEl.classList.remove('hidden-eye');
-        } else {
-          eyeEl.textContent = '🚫';
-          eyeEl.classList.add('hidden-eye');
-        }
-      });
-    }
-
+    // --- NODE METADATA (MATCHING USER'S FREECAD PHOTO) ---
     const nodeMetadata = {
       '01': {
         title: "_01_Front_Cardboard_Cover",
         icon: "📄",
-        desc: "Precision laser/knife cut 2.0 mm brown corrugated/grey cardboard faceplate with 4 custom cutouts for sound pinhole, blue LED, round voice trigger button, and white latching power switch collar.",
+        desc: "Precision cut 2.0 mm brown octagonal cardboard cover with 4 custom cutouts for upper sound pinhole, blue LED, round voice trigger button, and white latching power switch.",
         table: [
           ["Outer Dimensions", "62 × 90 × 2.0 mm (Octagonal)"],
           ["Corner 45° Chamfers", "8.0 mm on all 4 corners"],
@@ -1350,7 +1369,7 @@
       '02': {
         title: "_02_Front_Controls_Switches_LED",
         icon: "🔘",
-        desc: "Front user interface controls: Self-locking white latching push-push power switch (matching physical photo), round tactile voice query button (Ø 7 mm), and 5 mm diffused blue activity LED.",
+        desc: "Front controls: Self-locking white latching push-push power switch (matching physical photo), round tactile voice query button (Ø 7 mm), and 5 mm diffused blue activity LED.",
         table: [
           ["White Power Switch", "Latching push-push, 8×8mm base, Ø5.6mm collar"],
           ["Voice Push Button", "Momentary tactile switch, Ø7mm round actuation cap"],
@@ -1377,7 +1396,7 @@
         table: [
           ["Microcontroller", "ESP32-S3-WROOM-1 DevKit (N8R8)"],
           ["Board Dimensions", "70 × 39 × 10 mm (Centered on Starboard)"],
-          ["Pin Header Rows", "Dual 22-pin gold female socket strips (18mm apart)"],
+          ["Pin Header Rows", "Dual 22-pin gold female socket strips"],
           ["Z-Axis Position", "Z = -1.0 mm (Central spine)"],
           ["Processing Specs", "Dual 240MHz Xtensa LX7, 8MB PSRAM, 8MB Flash"]
         ]
@@ -1427,94 +1446,338 @@
       }
     };
 
+    // Build Model Tree HTML for Desktop and Mobile
+    function generateTreeHTML(containerId) {
+      let html = `
+        <div class="tree-root-item">
+          <span>📄 ai_pendant_mvp</span>
+          <span style="font-size:0.68rem; color:#38bdf8;">Octagonal 62×90×38mm</span>
+        </div>
+      `;
+      Object.keys(nodeMetadata).forEach(id => {
+        const item = nodeMetadata[id];
+        html += `
+          <div class="tree-node" id="node-${id}" onclick="selectNode('${id}')">
+            <div class="tree-node-left">
+              <span class="tree-icon">📁</span>
+              <span>${item.title}</span>
+            </div>
+            <div class="tree-eye" id="eye-${id}" onclick="toggleLayer('${id}', event)">👁️</div>
+          </div>
+        `;
+      });
+      return html;
+    }
+
+    document.getElementById('model-tree-desktop').innerHTML = generateTreeHTML('desktop');
+
+    // Layer Visibility State
+    const layerVisibility = {
+      '01': true, '02': true, '03': true, '04': true,
+      '05': true, '06': true, '07': true, '08': true
+    };
+
+    function toggleLayer(nodeId, event) {
+      if (event) event.stopPropagation();
+      layerVisibility[nodeId] = !layerVisibility[nodeId];
+      treeGroups[nodeId].visible = layerVisibility[nodeId];
+
+      document.querySelectorAll('#eye-' + nodeId).forEach(eyeEl => {
+        if (layerVisibility[nodeId]) {
+          eyeEl.textContent = '👁️';
+          eyeEl.classList.remove('hidden-eye');
+        } else {
+          eyeEl.textContent = '🚫';
+          eyeEl.classList.add('hidden-eye');
+        }
+      });
+    }
+
+    function toggleAllLayers(visibleState) {
+      Object.keys(layerVisibility).forEach(k => {
+        layerVisibility[k] = visibleState;
+        treeGroups[k].visible = visibleState;
+        document.querySelectorAll('#eye-' + k).forEach(eyeEl => {
+          if (visibleState) {
+            eyeEl.textContent = '👁️';
+            eyeEl.classList.remove('hidden-eye');
+          } else {
+            eyeEl.textContent = '🚫';
+            eyeEl.classList.add('hidden-eye');
+          }
+        });
+      });
+    }
+
+    // --- VIEW MODE SYSTEM (EARLIER SOLID PRODUCT IS DEFAULT FIRST!) ---
+    let currentViewMode = 'earlier';
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      
+      document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById('btn-choice-' + mode);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const expVal = (mode === 'exploded') ? 75 : 0;
+      setExplosion(expVal / 100.0);
+      updateExplodeDisplays(expVal);
+
+      if (mode === 'earlier') {
+        // Complete solid product view (DEFAULT FIRST)
+        fMesh.material = matCardboardSolid;
+        wallsMesh.material = matCardboardEdgeSolid;
+        bMesh.material = matCardboardSolid;
+        stackGuideLine.visible = false;
+        toggleAllLayers(true);
+        updateDetailCard('earlier');
+      } else if (mode === 'xray') {
+        // Translucent internal view
+        fMesh.material = matCardboardGlass;
+        wallsMesh.material = matCardboardEdgeGlass;
+        bMesh.material = matCardboardGlass;
+        stackGuideLine.visible = false;
+        toggleAllLayers(true);
+        updateDetailCard('xray');
+      } else if (mode === 'tree') {
+        // Model tree view with translucent enclosure
+        fMesh.material = matCardboardGlass;
+        wallsMesh.material = matCardboardEdgeGlass;
+        bMesh.material = matCardboardGlass;
+        stackGuideLine.visible = false;
+        updateDetailCard('tree');
+      } else if (mode === 'exploded') {
+        // Exploded view
+        fMesh.material = matCardboardSolid;
+        wallsMesh.material = matCardboardEdgeSolid;
+        bMesh.material = matCardboardSolid;
+        stackGuideLine.visible = true;
+        toggleAllLayers(true);
+        updateDetailCard('exploded');
+      }
+    }
+
+    function setExplosion(factor) {
+      for (const [key, grp] of Object.entries(treeGroups)) {
+        grp.position.z = explodeOffsets[key] * factor;
+      }
+    }
+
+    function updateExplodeDisplays(val) {
+      const elDesktop = document.getElementById('explode-range-desktop');
+      const textDesktop = document.getElementById('explode-display-desktop');
+      if (elDesktop) elDesktop.value = val;
+      if (textDesktop) textDesktop.textContent = Math.round(val) + ' mm';
+
+      const elMobile = document.getElementById('explode-range-mobile');
+      const textMobile = document.getElementById('explode-display-mobile');
+      if (elMobile) elMobile.value = val;
+      if (textMobile) textMobile.textContent = Math.round(val) + ' mm';
+    }
+
+    document.getElementById('explode-range-desktop').addEventListener('input', (e) => {
+      const f = parseFloat(e.target.value) / 100.0;
+      updateExplodeDisplays(e.target.value);
+      setExplosion(f);
+      stackGuideLine.visible = (f > 0.05);
+    });
+
+    // Select Component Node
     function selectNode(nodeId) {
       document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('selected'));
-      const nodeEl = document.getElementById('node-' + nodeId);
-      if (nodeEl) nodeEl.classList.add('selected');
+      document.querySelectorAll('#node-' + nodeId).forEach(n => n.classList.add('selected'));
 
       const info = nodeMetadata[nodeId];
       if (!info) return;
 
-      document.getElementById('detail-title-icon').textContent = info.icon;
-      document.getElementById('detail-title').textContent = info.title;
-      document.getElementById('card-heading').textContent = info.title;
-      document.getElementById('card-desc').textContent = info.desc;
+      // Update Desktop details
+      document.getElementById('detail-title-icon-desktop').textContent = info.icon;
+      document.getElementById('detail-title-desktop').textContent = info.title;
+      document.getElementById('card-heading-desktop').textContent = info.title;
+      document.getElementById('card-desc-desktop').textContent = info.desc;
 
-      const tableEl = document.getElementById('card-table');
+      const tableEl = document.getElementById('card-table-desktop');
       tableEl.innerHTML = '';
       info.table.forEach(([k, v]) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<th>${k}</th><td class="val-dim">${v}</td>`;
         tableEl.appendChild(tr);
       });
+
+      // If mobile drawer is open to details or tree, update it
+      const mobileDetails = document.getElementById('mobile-details-content');
+      if (mobileDetails) {
+        mobileDetails.innerHTML = getDetailsHTML(info);
+      }
+    }
+
+    function getDetailsHTML(info) {
+      let rows = '';
+      info.table.forEach(([k, v]) => {
+        rows += `<tr><th>${k}</th><td class="val-dim">${v}</td></tr>`;
+      });
+      return `
+        <div class="comp-info-card">
+          <h3><span>${info.icon}</span> ${info.title}</h3>
+          <p>${info.desc}</p>
+          <table class="specs-table">${rows}</table>
+        </div>
+      `;
     }
 
     function updateDetailCard(mode) {
       if (mode === 'earlier') {
-        document.getElementById('detail-title-icon').textContent = '📦';
-        document.getElementById('detail-title').textContent = 'Earlier View: Solid Assembled';
-        document.getElementById('card-heading').textContent = 'Fully Assembled Physical Pendant';
-        document.getElementById('card-desc').textContent = 'Earlier solid exterior view with finished cardboard enclosure, front buttons, status LED, and right-side USB-C and MicroSD slots.';
-        document.getElementById('card-table').innerHTML = `
+        document.getElementById('detail-title-icon-desktop').textContent = '📦';
+        document.getElementById('detail-title-desktop').textContent = 'Complete Assembled Product';
+        document.getElementById('card-heading-desktop').textContent = 'Fully Assembled Physical Pendant';
+        document.getElementById('card-desc-desktop').textContent = 'Earlier solid exterior view showing the finished wearable pendant with front buttons, acoustic pinhole, blue LED, and side USB-C & MicroSD port cutouts.';
+        document.getElementById('card-table-desktop').innerHTML = `
           <tr><th>Enclosure Exterior</th><td class="val-dim">Solid Opaque Cardboard</td></tr>
           <tr><th>Dimensions</th><td class="val-dim">62 × 90 × 38 mm</td></tr>
           <tr><th>Front Buttons</th><td class="val-dim">White Power Switch + Voice Button</td></tr>
           <tr><th>Right Ports</th><td class="val-dim">MicroSD & USB-C Cutouts</td></tr>
         `;
       } else if (mode === 'xray') {
-        document.getElementById('detail-title-icon').textContent = '🔮';
-        document.getElementById('detail-title').textContent = 'Internal X-Ray View';
-        document.getElementById('card-heading').textContent = 'Transparent Enclosure Internal View';
-        document.getElementById('card-desc').textContent = 'Enclosure cardboard shell is set to 72% transparency so you can see all 3 Starboard decks, ESP32-S3, battery, mic, and wiring in their exact spatial positions inside!';
-        document.getElementById('card-table').innerHTML = `
+        document.getElementById('detail-title-icon-desktop').textContent = '🔮';
+        document.getElementById('detail-title-desktop').textContent = 'Internal X-Ray View';
+        document.getElementById('card-heading-desktop').textContent = 'Transparent Enclosure Internal View';
+        document.getElementById('card-desc-desktop').textContent = 'Enclosure is set to 72% transparency so you can clearly see all 3 internal Starboard decks, ESP32-S3, battery, mic, and wiring in their exact spatial positions inside!';
+        document.getElementById('card-table-desktop').innerHTML = `
           <tr><th>Shell Material</th><td class="val-dim">Translucent Cardboard (Glass Mode)</td></tr>
           <tr><th>Deck 1 (Top)</th><td class="val-dim">Upper Mic + SD Card Module</td></tr>
           <tr><th>Deck 2 (Mid)</th><td class="val-dim">ESP32-S3 DevKit (70×39mm)</td></tr>
           <tr><th>Deck 3 (Bottom)</th><td class="val-dim">Battery + Booster + TP4056</td></tr>
         `;
       } else if (mode === 'exploded') {
-        document.getElementById('detail-title-icon').textContent = '💥';
-        document.getElementById('detail-title').textContent = 'Exploded 3D Stack View';
-        document.getElementById('card-heading').textContent = 'Layer-by-Layer Exploded Stack';
-        document.getElementById('card-desc').textContent = 'All 8 layers separated vertically along the central axis with a blue dashed alignment guide line.';
+        document.getElementById('detail-title-icon-desktop').textContent = '💥';
+        document.getElementById('detail-title-desktop').textContent = 'Exploded 3D Stack View';
+        document.getElementById('card-heading-desktop').textContent = 'Layer-by-Layer Exploded Stack';
+        document.getElementById('card-desc-desktop').textContent = 'All 8 layers separated vertically along the central axis with a blue dashed alignment guide line.';
       }
     }
 
-    // --- HARDWARE SIMULATOR LOGIC ---
+    // --- 3D RAYCASTING TAP / CLICK SELECTION ---
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let touchStartTime = 0;
+    let touchStartX = 0, touchStartY = 0;
+
+    function handlePointerDown(e) {
+      touchStartTime = Date.now();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      touchStartX = clientX;
+      touchStartY = clientY;
+    }
+
+    function handlePointerUp(e) {
+      const dt = Date.now() - touchStartTime;
+      const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+      const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+      const dist = Math.hypot(clientX - touchStartX, clientY - touchStartY);
+
+      // Only treat as click/tap if it wasn't a drag/orbit gesture
+      if (dt < 300 && dist < 12) {
+        mouse.x = (clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects(interactiveMeshes, true);
+        if (intersects.length > 0) {
+          const hit = intersects[0].object;
+          if (hit.userData && hit.userData.nodeId) {
+            const nodeId = hit.userData.nodeId;
+            selectNode(nodeId);
+
+            // Special interactive operation if tapping specific controls
+            if (hit.userData.partName === 'White Power Switch Plunger') {
+              togglePowerSwitch();
+            } else if (hit.userData.partName === 'Voice Record Push Button') {
+              triggerPushAction();
+            } else {
+              // Open mobile details drawer on tap if on smartphone
+              if (window.innerWidth <= 860) {
+                openDrawer('details');
+              }
+            }
+
+            // Brief pulse highlight
+            const origMat = hit.material;
+            if (hit.material && hit.material.emissive) {
+              const oldEm = hit.material.emissive.getHex();
+              hit.material.emissive.setHex(0x38bdf8);
+              setTimeout(() => { hit.material.emissive.setHex(oldEm); }, 250);
+            }
+          }
+        }
+      }
+    }
+
+    window.addEventListener('mousedown', handlePointerDown);
+    window.addEventListener('mouseup', handlePointerUp);
+    window.addEventListener('touchstart', handlePointerDown, { passive: true });
+    window.addEventListener('touchend', handlePointerUp, { passive: true });
+
+    // --- HARDWARE SWITCHES SIMULATOR LOGIC ---
     let isPowerOn = true;
     let isRecording = false;
 
+    function playClickSound(freq = 600) {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch (e) {}
+    }
+
     function togglePowerSwitch() {
       isPowerOn = !isPowerOn;
-      const clickyBtn = document.getElementById('pwr-clicky-btn');
-      const clickyText = document.getElementById('clicky-text');
-      const pwrText = document.getElementById('pwr-status-text');
-      const ledDot = document.getElementById('sim-led');
-      const recText = document.getElementById('record-status-text');
-      const pushBtn = document.getElementById('push-btn');
+      playClickSound(isPowerOn ? 750 : 380);
+
+      const statusText = isPowerOn ? 'State: Latched ON' : 'State: Popped OFF';
+      const statusColor = isPowerOn ? '#22c55e' : '#ef4444';
+      const clickyText = isPowerOn ? 'ON' : 'OFF';
+
+      // Update Desktop & Mobile UI
+      ['desktop', 'mobile'].forEach(suffix => {
+        const pwrBtn = document.getElementById(`pwr-clicky-btn-${suffix}`);
+        const pwrTxt = document.getElementById(`clicky-text-${suffix}`);
+        const pwrStatus = document.getElementById(`pwr-status-text-${suffix}`);
+        const ledDot = document.getElementById(`sim-led-${suffix}`);
+        const recText = document.getElementById(`record-status-text-${suffix}`);
+        const pushBtn = document.getElementById(`push-btn-${suffix}`);
+
+        if (pwrBtn) pwrBtn.classList.toggle('latched', isPowerOn);
+        if (pwrTxt) pwrTxt.textContent = clickyText;
+        if (pwrStatus) {
+          pwrStatus.textContent = statusText;
+          pwrStatus.style.color = statusColor;
+        }
+        if (ledDot) ledDot.classList.toggle('active', isPowerOn);
+        if (recText) recText.textContent = isPowerOn ? 'Ready for trigger' : 'Power is OFF';
+        if (pushBtn) {
+          pushBtn.disabled = !isPowerOn;
+          pushBtn.style.opacity = isPowerOn ? '1' : '0.5';
+        }
+      });
 
       if (isPowerOn) {
-        clickyBtn.classList.add('latched');
-        clickyText.textContent = 'ON';
-        pwrText.innerHTML = '<span style="color:#22c55e; font-weight:700;">State: Latched ON</span>';
-        whitePlungerMesh.position.z = Z_FRONT_CARD + 1.6;
-        ledDot.classList.add('active');
+        whitePlungerMesh.position.z = Z_FRONT_CARD + 1.6; // Latched down
         matLED.emissive.setHex(0x00aacc);
         matLED.emissiveIntensity = 0.8;
-        recText.textContent = 'Ready for trigger';
-        pushBtn.disabled = false;
-        pushBtn.style.opacity = '1';
       } else {
-        clickyBtn.classList.remove('latched');
-        clickyText.textContent = 'OFF';
-        pwrText.innerHTML = '<span style="color:#ef4444; font-weight:700;">State: Popped OFF</span>';
-        whitePlungerMesh.position.z = Z_FRONT_CARD + 3.4;
-        ledDot.classList.remove('active');
+        whitePlungerMesh.position.z = Z_FRONT_CARD + 3.4; // Sprung up
         matLED.emissive.setHex(0x000000);
         matLED.emissiveIntensity = 0.0;
-        recText.textContent = 'Power is OFF';
-        pushBtn.disabled = true;
-        pushBtn.style.opacity = '0.5';
         isRecording = false;
         btnMesh.position.z = Z_FRONT_CARD + 2.5;
       }
@@ -1523,21 +1786,29 @@
     function triggerPushAction() {
       if (!isPowerOn) return;
       isRecording = !isRecording;
-      const recText = document.getElementById('record-status-text');
+      playClickSound(880);
+
+      ['desktop', 'mobile'].forEach(suffix => {
+        const recText = document.getElementById(`record-status-text-${suffix}`);
+        if (recText) {
+          recText.innerHTML = isRecording 
+            ? '<span style="color:#00e5ff; font-weight:700;">● RECORDING AUDIO</span>'
+            : 'Ready for trigger';
+        }
+      });
 
       if (isRecording) {
-        recText.innerHTML = '<span style="color:#00e5ff; font-weight:700;">● RECORDING AUDIO</span>';
         matLED.emissive.setHex(0x00ffff);
         matLED.emissiveIntensity = 3.0;
-        btnMesh.position.z = Z_FRONT_CARD + 1.2;
+        btnMesh.position.z = Z_FRONT_CARD + 1.2; // depressed
       } else {
-        recText.textContent = 'Ready for trigger';
         matLED.emissive.setHex(0x00aacc);
         matLED.emissiveIntensity = 0.8;
-        btnMesh.position.z = Z_FRONT_CARD + 2.5;
+        btnMesh.position.z = Z_FRONT_CARD + 2.5; // released
       }
     }
 
+    // Camera Presets
     function setCam(mode) {
       controls.reset();
       switch (mode) {
@@ -1549,12 +1820,113 @@
       controls.update();
     }
 
+    // SMARTPHONE MOBILE DRAWER SYSTEM
+    let activeDrawerTab = null;
+
+    function openDrawer(tab) {
+      activeDrawerTab = tab;
+      const drawer = document.getElementById('mobile-drawer');
+      const overlay = document.getElementById('drawer-overlay');
+      const titleEl = document.getElementById('drawer-title');
+      const bodyEl = document.getElementById('drawer-body');
+
+      document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+
+      if (tab === 'tree') {
+        titleEl.innerHTML = '<span>📁</span> FreeCAD Model Tree (Photo Hierarchy)';
+        bodyEl.innerHTML = `
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <button class="btn-tree-action" onclick="toggleAllLayers(true)" style="padding:5px 12px;">Show All 👁️</button>
+            <button class="btn-tree-action" onclick="toggleAllLayers(false)" style="padding:5px 12px;">Hide All 🚫</button>
+          </div>
+          <div class="cad-tree" id="model-tree-mobile">
+            ${generateTreeHTML('mobile')}
+          </div>
+        `;
+      } else if (tab === 'controls') {
+        titleEl.innerHTML = '<span>⚡</span> Physical Switches Simulator';
+        bodyEl.innerHTML = `
+          <div class="controls-sim-box">
+            <div class="sim-row" style="margin-bottom:12px;">
+              <div>
+                <div style="font-size:0.8rem; font-weight:700; color:#fff;">1. White Power Switch</div>
+                <div style="font-size:0.72rem; color:${isPowerOn ? '#22c55e' : '#ef4444'};" id="pwr-status-text-mobile">
+                  ${isPowerOn ? 'State: Latched ON' : 'State: Popped OFF'}
+                </div>
+              </div>
+              <button class="btn-clicky-ui ${isPowerOn ? 'latched' : ''}" id="pwr-clicky-btn-mobile" onclick="togglePowerSwitch()">
+                <span>⚡</span> <span id="clicky-text-mobile">${isPowerOn ? 'ON' : 'OFF'}</span>
+              </button>
+            </div>
+            <div style="height:1px; background:#1e293b; margin:12px 0;"></div>
+            <div class="sim-row">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="led-indicator-dot ${isPowerOn ? 'active' : ''}" id="sim-led-mobile"></div>
+                <div>
+                  <div style="font-size:0.8rem; font-weight:700; color:#fff;">2. Voice Record Button</div>
+                  <div style="font-size:0.72rem; color:#38bdf8;" id="record-status-text-mobile">
+                    ${isRecording ? '<span style="color:#00e5ff; font-weight:700;">● RECORDING AUDIO</span>' : (isPowerOn ? 'Ready for trigger' : 'Power is OFF')}
+                  </div>
+                </div>
+              </div>
+              <button class="btn-push-ui" id="push-btn-mobile" onclick="triggerPushAction()" ${!isPowerOn ? 'disabled style="opacity:0.5;"' : ''}>
+                🎙️ PUSH
+              </button>
+            </div>
+          </div>
+        `;
+      } else if (tab === 'explode') {
+        titleEl.innerHTML = '<span>💥</span> Exploded Stack Separation';
+        bodyEl.innerHTML = `
+          <div class="slider-box">
+            <div class="slider-header">
+              <span>Z-Stack Separation:</span>
+              <span class="val" id="explode-display-mobile">0 mm</span>
+            </div>
+            <input type="range" id="explode-range-mobile" min="0" max="100" value="${document.getElementById('explode-range-desktop').value}">
+          </div>
+          <div class="btn-grid-4" style="margin-top:12px;">
+            <button class="btn-camera" onclick="setCam('iso')">Isometric</button>
+            <button class="btn-camera" onclick="setCam('front')">Front</button>
+            <button class="btn-camera" onclick="setCam('side')">Side</button>
+            <button class="btn-camera" onclick="setCam('top')">Top</button>
+          </div>
+        `;
+        setTimeout(() => {
+          const rng = document.getElementById('explode-range-mobile');
+          if (rng) {
+            rng.addEventListener('input', (e) => {
+              const f = parseFloat(e.target.value) / 100.0;
+              updateExplodeDisplays(e.target.value);
+              setExplosion(f);
+              stackGuideLine.visible = (f > 0.05);
+            });
+          }
+        }, 50);
+      } else if (tab === 'details') {
+        titleEl.innerHTML = '<span>🔍</span> Component Specifications';
+        bodyEl.innerHTML = `<div id="mobile-details-content">${getDetailsHTML(nodeMetadata['01'])}</div>`;
+      }
+
+      drawer.classList.add('open');
+      overlay.classList.add('active');
+    }
+
+    function closeDrawer() {
+      const drawer = document.getElementById('mobile-drawer');
+      const overlay = document.getElementById('drawer-overlay');
+      drawer.classList.remove('open');
+      overlay.classList.remove('active');
+      document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+    }
+
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
+    // Main Render Loop
     function renderLoop() {
       requestAnimationFrame(renderLoop);
       controls.update();
@@ -1565,9 +1937,15 @@
     }
     renderLoop();
 
-    // Default selection
+    // Fade out tap hint after 5 seconds
+    setTimeout(() => {
+      const hint = document.getElementById('tap-hint');
+      if (hint) hint.style.opacity = '0';
+    }, 5000);
+
+    // DEFAULT ON PAGE LOAD: Complete Assembled Product (Solid Earlier View)
     selectNode('01');
-    setViewMode('tree');
+    setViewMode('earlier');
   </script>
 </body>
 </html>
