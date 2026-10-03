@@ -1,15 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Brain2 Wearable AI Pendant - 3D CAD & Electronics Viewer</title>
-  <meta name="description" content="Interactive 3D CAD & Electronics Viewer for the Brain2 Wearable AI Pendant. Mobile and desktop compatible. Complete solid product view, transparent X-ray, exploded stack, and FreeCAD Model Tree.">
+  <meta name="description" content="Interactive 3D CAD & Electronics Viewer for the Brain2 Wearable AI Pendant. Features modular 3-tier Starboard perfboard stack, ESP32-S3 DevKit, INMP441 MEMS microphone, and cardboard enclosure.">
+  <meta name="keywords" content="Brain2, AI Pendant, ESP32-S3, Wearable CAD, FreeCAD, Three.js, WebGL 3D, INMP441, MT3608, TP4056, Starboard">
+  <meta name="author" content="akcodes-py">
+  <meta name="theme-color" content="#070b14">
+
+  <!-- Open Graph / Facebook / LinkedIn -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://akcodes-py.github.io/ai_pendant_3d_view/">
+  <meta property="og:title" content="Brain2 Wearable AI Pendant - 3D CAD & Electronics Viewer">
+  <meta property="og:description" content="Explore the physical 3D CAD architecture, 3-tier stacked electronics, and cardboard enclosure in real-time WebGL.">
+  <meta property="og:image" content="https://akcodes-py.github.io/ai_pendant_3d_view/preview.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://akcodes-py.github.io/ai_pendant_3d_view/">
+  <meta name="twitter:title" content="Brain2 Wearable AI Pendant 3D Viewer">
+  <meta name="twitter:description" content="Interactive 3D CAD & Electronics Viewer for Brain2 Wearable AI Pendant.">
+  <meta name="twitter:image" content="https://akcodes-py.github.io/ai_pendant_3d_view/preview.png">
+
+  <!-- Canonical Link -->
+  <link rel="canonical" href="https://akcodes-py.github.io/ai_pendant_3d_view/">
+
+  <!-- High-Resolution Embedded SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpolygon points='18,4 46,4 60,18 60,46 46,60 18,60 4,46 4,18' fill='%230f172a' stroke='%2338bdf8' stroke-width='3.5'/%3E%3Ccircle cx='32' cy='22' r='5.5' fill='%2300e5ff'/%3E%3Ccircle cx='32' cy='38' r='6.5' fill='%231e293b' stroke='%2394a3b8' stroke-width='2'/%3E%3Ccircle cx='20' cy='24' r='2.5' fill='%23d97706'/%3E%3C/svg%3E">
+
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <style>
-    :root {
+    /* CSS Variables for Dark & Light Themes */
+    :root, [data-theme="dark"] {
       --bg: #070b14;
       --panel-bg: rgba(13, 20, 36, 0.92);
       --panel-border: rgba(56, 189, 248, 0.25);
@@ -17,18 +44,52 @@
       --accent-glow: rgba(56, 189, 248, 0.35);
       --text: #f1f5f9;
       --muted: #94a3b8;
+      --card-bg: #0d1527;
+      --card-border: #1e2e4a;
+      --box-bg: rgba(15, 23, 42, 0.75);
+      --tree-root-bg: #111c30;
+      --tree-bg: #0b1120;
+      --tree-border: #1e293b;
+      --sim-box-bg: linear-gradient(135deg, #182234, #0f172a);
+      --choice-bg: rgba(13, 20, 36, 0.95);
+      --choice-btn-bg: #151f30;
+      --choice-btn-border: #26354a;
+      --choice-btn-color: #cbd5e1;
     }
+    [data-theme="light"] {
+      --bg: #e2e8f0;
+      --panel-bg: rgba(255, 255, 255, 0.95);
+      --panel-border: rgba(2, 132, 199, 0.28);
+      --accent: #0284c7;
+      --accent-glow: rgba(2, 132, 199, 0.25);
+      --text: #0f172a;
+      --muted: #475569;
+      --card-bg: #f8fafc;
+      --card-border: #cbd5e1;
+      --box-bg: rgba(241, 245, 249, 0.92);
+      --tree-root-bg: #e2e8f0;
+      --tree-bg: #ffffff;
+      --tree-border: #cbd5e1;
+      --sim-box-bg: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      --choice-bg: rgba(255, 255, 255, 0.96);
+      --choice-btn-bg: #f1f5f9;
+      --choice-btn-border: #cbd5e1;
+      --choice-btn-color: #334155;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body {
       background-color: var(--bg);
       color: var(--text);
       font-family: 'Plus Jakarta Sans', sans-serif;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: hidden;
       width: 100vw;
       height: 100vh;
       height: 100dvh;
       user-select: none;
       touch-action: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
     #canvas-container {
       width: 100%;
@@ -38,6 +99,37 @@
       left: 0;
       z-index: 1;
       touch-action: none;
+    }
+
+    /* LIGHT / DARK MODE ICON-ONLY BUTTON (NO TEXT) */
+    .theme-toggle-btn {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      z-index: 25;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .theme-toggle-btn:hover {
+      transform: scale(1.10) rotate(15deg);
+      border-color: var(--accent);
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    .theme-toggle-btn:active {
+      transform: scale(0.92);
     }
 
     /* TOP CHOICE BAR (Desktop & Mobile Scrollable) */
@@ -50,21 +142,21 @@
       justify-content: center;
       z-index: 20;
       pointer-events: none;
-      padding: 0 10px;
+      padding: 0 54px 0 10px; /* leaves room for right theme button */
     }
     .top-choice-bar {
       pointer-events: auto;
-      background: rgba(13, 20, 36, 0.95);
+      background: var(--choice-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(56, 189, 248, 0.35);
+      border: 1px solid var(--panel-border);
       border-radius: 40px;
       padding: 5px 8px;
       display: flex;
       align-items: center;
       gap: 5px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65), 0 0 18px rgba(56, 189, 248, 0.2);
-      max-width: 96vw;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 18px var(--accent-glow);
+      max-width: calc(100vw - 70px);
       overflow-x: auto;
       scrollbar-width: none;
       white-space: nowrap;
@@ -80,14 +172,14 @@
       padding: 0 6px;
       display: none;
     }
-    @media (min-width: 640px) {
+    @media (min-width: 680px) {
       .choice-label { display: inline-block; }
     }
 
     .choice-btn {
-      background: #151f30;
-      border: 1px solid #26354a;
-      color: #cbd5e1;
+      background: var(--choice-btn-bg);
+      border: 1px solid var(--choice-btn-border);
+      color: var(--choice-btn-color);
       padding: 7px 12px;
       border-radius: 20px;
       font-size: 0.74rem;
@@ -121,8 +213,8 @@
       border: 1px solid var(--panel-border);
       border-radius: 14px;
       padding: 14px;
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, background 0.3s ease;
     }
     
     #left-panel {
@@ -148,12 +240,12 @@
       justify-content: space-between;
       margin-bottom: 10px;
       padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(125, 125, 125, 0.15);
     }
     .panel-header h2 {
       font-size: 0.90rem;
       font-weight: 800;
-      color: #fff;
+      color: var(--text);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -183,19 +275,20 @@
 
     /* FreeCAD Model Tree (Matching User's Photo!) */
     .cad-tree {
-      background: #0b1120;
-      border: 1px solid #1e293b;
+      background: var(--tree-bg);
+      border: 1px solid var(--tree-border);
       border-radius: 10px;
       overflow: hidden;
       margin-bottom: 10px;
+      transition: background 0.3s ease;
     }
     .tree-root-item {
-      background: #111c30;
+      background: var(--tree-root-bg);
       padding: 7px 10px;
       font-size: 0.78rem;
       font-weight: 800;
-      color: #e2e8f0;
-      border-bottom: 1px solid #1e293b;
+      color: var(--text);
+      border-bottom: 1px solid var(--tree-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -205,9 +298,9 @@
       gap: 4px;
     }
     .btn-tree-action {
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: #94a3b8;
+      background: var(--choice-btn-bg);
+      border: 1px solid var(--choice-btn-border);
+      color: var(--muted);
       font-size: 0.68rem;
       padding: 2px 8px;
       border-radius: 4px;
@@ -224,9 +317,9 @@
       align-items: center;
       justify-content: space-between;
       padding: 6px 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid rgba(125, 125, 125, 0.08);
       font-size: 0.73rem;
-      color: #cbd5e1;
+      color: var(--text);
       cursor: pointer;
       transition: background 0.15s;
     }
@@ -253,8 +346,8 @@
     .tree-eye {
       width: 28px;
       height: 26px;
-      background: #1e293b;
-      border: 1px solid #334155;
+      background: var(--choice-btn-bg);
+      border: 1px solid var(--choice-btn-border);
       border-radius: 6px;
       display: flex;
       align-items: center;
@@ -265,7 +358,8 @@
       flex-shrink: 0;
     }
     .tree-eye:hover {
-      background: #334155;
+      background: var(--accent);
+      color: #fff;
     }
     .tree-eye.hidden-eye {
       background: #3f1d24;
@@ -275,10 +369,10 @@
 
     /* Slider Box */
     .slider-box {
-      background: rgba(15, 23, 42, 0.7);
+      background: var(--box-bg);
       padding: 9px 12px;
       border-radius: 10px;
-      border: 1px solid #1e293b;
+      border: 1px solid var(--panel-border);
       margin-bottom: 10px;
     }
     .slider-header {
@@ -313,8 +407,8 @@
 
     /* Hardware Simulator Box */
     .controls-sim-box {
-      background: linear-gradient(135deg, #182234, #0f172a);
-      border: 1px solid rgba(56, 189, 248, 0.25);
+      background: var(--sim-box-bg);
+      border: 1px solid var(--panel-border);
       padding: 10px 12px;
       border-radius: 12px;
       margin-bottom: 10px;
@@ -386,9 +480,9 @@
       margin-bottom: 10px;
     }
     button.btn-camera {
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: #cbd5e1;
+      background: var(--choice-btn-bg);
+      border: 1px solid var(--choice-btn-border);
+      color: var(--text);
       padding: 6px 2px;
       border-radius: 6px;
       font-size: 0.70rem;
@@ -403,8 +497,8 @@
 
     /* Component Info Card in Details Panel */
     .comp-info-card {
-      background: #0d1527;
-      border: 1px solid #1e2e4a;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 10px;
       padding: 10px 12px;
       margin-bottom: 10px;
@@ -412,7 +506,7 @@
     .comp-info-card h3 {
       font-size: 0.82rem;
       font-weight: 800;
-      color: #fff;
+      color: var(--text);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -420,7 +514,7 @@
     }
     .comp-info-card p {
       font-size: 0.72rem;
-      color: #94a3b8;
+      color: var(--muted);
       line-height: 1.4;
       margin-bottom: 6px;
     }
@@ -434,11 +528,11 @@
       text-align: left;
       color: var(--muted);
       padding: 4px 2px;
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px solid var(--card-border);
     }
     table.specs-table td {
       padding: 4px 2px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(125,125,125,0.08);
     }
     .val-dim {
       font-weight: 700;
@@ -453,12 +547,12 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 15;
-      background: rgba(15, 23, 42, 0.88);
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
       border-radius: 20px;
       padding: 4px 12px;
       font-size: 0.68rem;
-      color: #94a3b8;
+      color: var(--muted);
       pointer-events: none;
       transition: opacity 0.5s;
     }
@@ -471,19 +565,19 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      background: rgba(10, 16, 28, 0.96);
+      background: var(--choice-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border-top: 1px solid rgba(56, 189, 248, 0.25);
+      border-top: 1px solid var(--panel-border);
       z-index: 30;
       padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)) 4px;
       justify-content: space-around;
-      box-shadow: 0 -8px 24px rgba(0,0,0,0.6);
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.5);
     }
     .mobile-nav-btn {
       background: transparent;
       border: none;
-      color: #94a3b8;
+      color: var(--muted);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -495,13 +589,13 @@
       padding: 6px 8px;
       border-radius: 8px;
       transition: all 0.2s;
-      min-width: 60px;
+      min-width: 58px;
     }
     .mobile-nav-btn span.icon {
       font-size: 1.15rem;
     }
     .mobile-nav-btn.active {
-      color: #38bdf8;
+      color: var(--accent);
       background: rgba(56, 189, 248, 0.12);
     }
 
@@ -532,17 +626,17 @@
       width: 100%;
       max-height: 72vh;
       max-height: 72dvh;
-      background: rgba(13, 20, 36, 0.98);
+      background: var(--panel-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(56, 189, 248, 0.35);
+      border-top: 1px solid var(--panel-border);
       border-radius: 20px 20px 0 0;
       z-index: 40;
       padding: 12px 16px calc(20px + env(safe-area-inset-bottom, 0px)) 16px;
       transform: translateY(100%);
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       overflow-y: auto;
-      box-shadow: 0 -12px 40px rgba(0,0,0,0.8);
+      box-shadow: 0 -12px 40px rgba(0,0,0,0.7);
     }
     .mobile-drawer.open {
       transform: translateY(0);
@@ -550,7 +644,8 @@
     .drawer-drag-handle {
       width: 44px;
       height: 5px;
-      background: #334155;
+      background: var(--muted);
+      opacity: 0.4;
       border-radius: 4px;
       margin: 0 auto 12px auto;
     }
@@ -560,12 +655,12 @@
       align-items: center;
       margin-bottom: 12px;
       padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(125,125,125,0.15);
     }
     .drawer-close-btn {
-      background: #1e293b;
-      border: none;
-      color: #fff;
+      background: var(--choice-btn-bg);
+      border: 1px solid var(--choice-btn-border);
+      color: var(--text);
       width: 28px;
       height: 28px;
       border-radius: 50%;
@@ -598,6 +693,32 @@
       .desktop-bottom-pill {
         display: none !important;
       }
+      .theme-toggle-btn {
+        top: 6px;
+        right: 8px;
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+      }
+    }
+
+    /* Desktop Bottom Status Pill */
+    .desktop-bottom-pill {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 30px;
+      padding: 5px 16px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
     .status-dot {
       width: 8px;
@@ -606,10 +727,58 @@
       background: #22c55e;
       box-shadow: 0 0 8px #22c55e;
     }
+    .footer-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .footer-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Privacy & Legal Modal */
+    .legal-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .legal-modal-overlay.open {
+      display: flex;
+    }
+    .legal-modal-content {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      max-width: 520px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      color: var(--text);
+    }
+    .legal-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(125,125,125,0.15);
+    }
 
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--muted); opacity: 0.4; border-radius: 4px; }
   </style>
 
   <!-- Three.js + OrbitControls -->
@@ -619,6 +788,11 @@
 <body>
   <div id="canvas-container"></div>
 
+  <!-- ICON-ONLY LIGHT / DARK MODE TOGGLE BUTTON (NO TEXT, ONLY SYMBOL) -->
+  <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle Light and Dark Mode" title="Toggle Light and Dark Mode">
+    <span id="theme-icon">☀️</span>
+  </button>
+
   <!-- TAP HINT -->
   <div class="tap-hint-pill" id="tap-hint">
     <span>👆 <b>Tap any part</b> on the 3D pendant to inspect or operate!</span>
@@ -626,18 +800,18 @@
 
   <!-- CHOICE BAR: Earlier View (Complete Product) is DEFAULT FIRST! -->
   <div class="top-choice-bar-container">
-    <div class="top-choice-bar">
+    <div class="top-choice-bar" role="toolbar" aria-label="3D View Options">
       <span class="choice-label">View:</span>
-      <button class="choice-btn active" id="btn-choice-earlier" onclick="setViewMode('earlier')">
+      <button class="choice-btn active" id="btn-choice-earlier" onclick="setViewMode('earlier')" aria-label="Assembled Product View">
         <span>📦</span> Assembled Product
       </button>
-      <button class="choice-btn" id="btn-choice-xray" onclick="setViewMode('xray')">
+      <button class="choice-btn" id="btn-choice-xray" onclick="setViewMode('xray')" aria-label="Internal X-Ray View">
         <span>🔮</span> Internal X-Ray
       </button>
-      <button class="choice-btn" id="btn-choice-tree" onclick="setViewMode('tree')">
+      <button class="choice-btn" id="btn-choice-tree" onclick="setViewMode('tree')" aria-label="FreeCAD Model Tree View">
         <span>📁</span> Model Tree
       </button>
-      <button class="choice-btn" id="btn-choice-exploded" onclick="setViewMode('exploded')">
+      <button class="choice-btn" id="btn-choice-exploded" onclick="setViewMode('exploded')" aria-label="Exploded Stack View">
         <span>💥</span> Exploded Stack
       </button>
     </div>
@@ -672,7 +846,7 @@
         <span>Z-Stack Separation:</span>
         <span class="val" id="explode-display-desktop">0 mm</span>
       </div>
-      <input type="range" id="explode-range-desktop" min="0" max="100" value="0">
+      <input type="range" id="explode-range-desktop" min="0" max="100" value="0" aria-label="Explosion separation slider">
     </div>
 
     <!-- Camera Angles -->
@@ -694,26 +868,26 @@
       <!-- 1. White Latching Power Switch -->
       <div class="sim-row" style="margin-bottom:8px;">
         <div>
-          <div style="font-size:0.75rem; font-weight:700; color:#fff;">1. White Power Switch</div>
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text);">1. White Power Switch</div>
           <div style="font-size:0.68rem; color:#22c55e;" id="pwr-status-text-desktop">State: Latched ON</div>
         </div>
-        <button class="btn-clicky-ui latched" id="pwr-clicky-btn-desktop" onclick="togglePowerSwitch()">
+        <button class="btn-clicky-ui latched" id="pwr-clicky-btn-desktop" onclick="togglePowerSwitch()" aria-label="Toggle Power Switch">
           <span>⚡</span> <span id="clicky-text-desktop">ON</span>
         </button>
       </div>
 
-      <div style="height:1px; background:#1e293b; margin:8px 0;"></div>
+      <div style="height:1px; background:var(--panel-border); margin:8px 0;"></div>
 
       <!-- 2. Voice Push Button + Blue LED -->
       <div class="sim-row">
         <div style="display:flex; align-items:center; gap:8px;">
           <div class="led-indicator-dot active" id="sim-led-desktop"></div>
           <div>
-            <div style="font-size:0.75rem; font-weight:700; color:#fff;">2. Voice Record Button</div>
-            <div style="font-size:0.68rem; color:#38bdf8;" id="record-status-text-desktop">Ready for trigger</div>
+            <div style="font-size:0.75rem; font-weight:700; color:var(--text);">2. Voice Record Button</div>
+            <div style="font-size:0.68rem; color:var(--accent);" id="record-status-text-desktop">Ready for trigger</div>
           </div>
         </div>
-        <button class="btn-push-ui" id="push-btn-desktop" onclick="triggerPushAction()">
+        <button class="btn-push-ui" id="push-btn-desktop" onclick="triggerPushAction()" aria-label="Push Voice Recording Button">
           🎙️ PUSH
         </button>
       </div>
@@ -746,37 +920,37 @@
     </div>
     
     <div style="display:flex; flex-direction:column; gap:6px; font-size:0.72rem;">
-      <div style="background:#111b2e; padding:7px 9px; border-radius:8px; border-left:3px solid #38bdf8;">
-        <b style="color:#e2e8f0;">Deck 1 (Top):</b> Upper INMP441 MEMS Mic, MicroSD Reader, White Latching Power Switch, Voice Push Button, 5mm Blue LED.
+      <div style="background:var(--card-bg); padding:7px 9px; border-radius:8px; border-left:3px solid #38bdf8;">
+        <b style="color:var(--text);">Deck 1 (Top):</b> Upper INMP441 MEMS Mic, MicroSD Reader, White Latching Power Switch, Voice Push Button, 5mm Blue LED.
       </div>
-      <div style="background:#111b2e; padding:7px 9px; border-radius:8px; border-left:3px solid #60a5fa;">
-        <b style="color:#e2e8f0;">Deck 2 (Middle):</b> ESP32-S3 DevKit (70×39×10mm) on dual 22-pin socket headers.
+      <div style="background:var(--card-bg); padding:7px 9px; border-radius:8px; border-left:3px solid #60a5fa;">
+        <b style="color:var(--text);">Deck 2 (Middle):</b> ESP32-S3 DevKit (70×39×10mm) on dual 22-pin socket headers.
       </div>
-      <div style="background:#111b2e; padding:7px 9px; border-radius:8px; border-left:3px solid #f59e0b;">
-        <b style="color:#e2e8f0;">Deck 3 (Bottom):</b> 800mAh Li-Po Battery, TP4056 Charger, MT3608 5V Booster.
+      <div style="background:var(--card-bg); padding:7px 9px; border-radius:8px; border-left:3px solid #f59e0b;">
+        <b style="color:var(--text);">Deck 3 (Bottom):</b> 800mAh Li-Po Battery, TP4056 Charger, MT3608 5V Booster.
       </div>
     </div>
   </div>
 
   <!-- SMARTPHONE MOBILE BOTTOM NAVIGATION BAR -->
-  <div class="mobile-bottom-bar">
-    <button class="mobile-nav-btn" onclick="openDrawer('tree')">
+  <div class="mobile-bottom-bar" role="navigation" aria-label="Mobile Navigation">
+    <button class="mobile-nav-btn" onclick="openDrawer('tree')" aria-label="Model Tree">
       <span class="icon">📁</span>
       <span>Tree</span>
     </button>
-    <button class="mobile-nav-btn" onclick="openDrawer('controls')">
+    <button class="mobile-nav-btn" onclick="openDrawer('controls')" aria-label="Switches Simulator">
       <span class="icon">⚡</span>
       <span>Switches</span>
     </button>
-    <button class="mobile-nav-btn" onclick="openDrawer('explode')">
+    <button class="mobile-nav-btn" onclick="openDrawer('explode')" aria-label="Explode Stack">
       <span class="icon">💥</span>
       <span>Explode</span>
     </button>
-    <button class="mobile-nav-btn" onclick="openDrawer('details')">
+    <button class="mobile-nav-btn" onclick="openDrawer('details')" aria-label="Component Specs">
       <span class="icon">🔍</span>
       <span>Specs</span>
     </button>
-    <button class="mobile-nav-btn" onclick="setCam('iso')">
+    <button class="mobile-nav-btn" onclick="setCam('iso')" aria-label="Reset Camera View">
       <span class="icon">🔄</span>
       <span>Reset</span>
     </button>
@@ -785,13 +959,13 @@
   <!-- SMARTPHONE MOBILE DRAWER OVERLAY & BOTTOM SHEET -->
   <div class="mobile-drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
   
-  <div class="mobile-drawer" id="mobile-drawer">
+  <div class="mobile-drawer" id="mobile-drawer" role="dialog" aria-modal="true">
     <div class="drawer-drag-handle"></div>
     <div class="drawer-header">
       <h3 id="drawer-title" style="font-size:0.9rem; font-weight:800; display:flex; align-items:center; gap:6px;">
         <span>📁</span> Model Tree
       </h3>
-      <button class="drawer-close-btn" onclick="closeDrawer()">✕</button>
+      <button class="drawer-close-btn" onclick="closeDrawer()" aria-label="Close Drawer">✕</button>
     </div>
 
     <!-- Drawer Dynamic Content -->
@@ -807,23 +981,75 @@
     <span>•</span>
     <span>Scroll: Zoom</span>
     <span>•</span>
-    <span>Right-Click: Pan</span>
-    <span>•</span>
     <span>Click Any Part to Inspect</span>
+    <span>•</span>
+    <span class="footer-link" onclick="openLegalModal()">Privacy & Legal</span>
+    <span>•</span>
+    <a class="footer-link" href="https://github.com/akcodes-py/ai_pendant_3d_view" target="_blank" rel="noopener noreferrer">GitHub © 2026</a>
+  </div>
+
+  <!-- PRIVACY POLICY & TERMS MODAL -->
+  <div class="legal-modal-overlay" id="legal-modal" onclick="closeLegalModal(event)">
+    <div class="legal-modal-content" onclick="event.stopPropagation()">
+      <div class="legal-modal-header">
+        <h3 style="font-size:0.95rem; font-weight:800;">🔒 Privacy Policy & Open Source Terms</h3>
+        <button class="drawer-close-btn" onclick="closeLegalModal()">✕</button>
+      </div>
+      <div style="font-size:0.75rem; line-height:1.6; color:var(--muted);">
+        <p style="margin-bottom:10px;"><b style="color:var(--text);">Zero-Tracking Privacy Guarantee:</b> This web viewer operates entirely client-side inside your browser via WebGL. No user analytics, telemetry, or third-party cookies are tracked or stored.</p>
+        <p style="margin-bottom:10px;"><b style="color:var(--text);">Hardware License & Open Source:</b> The 3D CAD models, FreeCAD project files, and circuit schematics for the Brain2 Wearable AI Pendant are provided under the MIT open-source license for DIY prototyping and research.</p>
+        <p style="margin-bottom:10px;"><b style="color:var(--text);">Author & Repository:</b> Maintained by <a href="https://github.com/akcodes-py/ai_pendant_3d_view" target="_blank" rel="noopener noreferrer" style="color:var(--accent);">akcodes-py on GitHub</a>. Community contributions and pull requests are welcomed.</p>
+      </div>
+    </div>
   </div>
 
   <!-- THREE.JS 3D SCENE SCRIPT -->
   <script>
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x070b14);
-    scene.fog = new THREE.FogExp2(0x070b14, 0.0016);
+    
+    // Theme Management
+    let isDarkMode = true;
+
+    function initTheme() {
+      const saved = localStorage.getItem('ai_pendant_theme');
+      if (saved === 'light') {
+        setTheme(false);
+      } else {
+        setTheme(true);
+      }
+    }
+
+    function toggleTheme() {
+      setTheme(!isDarkMode);
+    }
+
+    function setTheme(dark) {
+      isDarkMode = dark;
+      localStorage.setItem('ai_pendant_theme', isDarkMode ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+
+      // Rule: In Dark Mode, button shows white/sun symbol ☀️. In Light Mode, button shows moon symbol 🌙.
+      const iconEl = document.getElementById('theme-icon');
+      if (iconEl) {
+        iconEl.textContent = isDarkMode ? '☀️' : '🌙';
+      }
+
+      // Three.js scene colors
+      const bgHex = isDarkMode ? 0x070b14 : 0xe2e8f0;
+      scene.background = new THREE.Color(bgHex);
+      if (scene.fog) {
+        scene.fog.color = new THREE.Color(bgHex);
+      }
+      if (amb) amb.intensity = isDarkMode ? 0.85 : 1.15;
+      if (dir1) dir1.intensity = isDarkMode ? 0.95 : 1.10;
+    }
 
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
     camera.position.set(135, 105, 185);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Smooth on high-DPI phones
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
@@ -1008,7 +1234,7 @@
     const matBat = new THREE.MeshStandardMaterial({ map: createBatteryTexture(), roughness: 0.3, metalness: 0.4 });
     const matMic = new THREE.MeshStandardMaterial({ map: createMicTexture(), roughness: 0.4 });
     
-    // Solid cardboard (Earlier view) vs Transparent Glass (X-ray)
+    // Solid Cardboard (Earlier View) vs Transparent Glass (X-Ray)
     const matCardboardSolid = new THREE.MeshStandardMaterial({ map: createCardboardTexture(), roughness: 0.85 });
     const matCardboardGlass = new THREE.MeshStandardMaterial({
       map: createCardboardTexture(),
@@ -1054,14 +1280,14 @@
 
     // GROUPS MATCHING FREECAD PHOTO EXACTLY (8 NODES)
     const treeGroups = {
-      '01': new THREE.Group(), // _01_Front_Cardboard_Cover
-      '02': new THREE.Group(), // _02_Front_Controls_Switches_LED
-      '03': new THREE.Group(), // _03_Starboard_1_Upper_Mic_and_SD_Card
-      '04': new THREE.Group(), // _04_Starboard_2_ESP32_DevKit
-      '05': new THREE.Group(), // _05_Starboard_3_Power_and_Battery
-      '06': new THREE.Group(), // _06_Perimeter_Cardboard_Walls
-      '07': new THREE.Group(), // _07_Back_Cover_and_Lanyard
-      '08': new THREE.Group(), // _08_Dimensions_and_Measurements
+      '01': new THREE.Group(),
+      '02': new THREE.Group(),
+      '03': new THREE.Group(),
+      '04': new THREE.Group(),
+      '05': new THREE.Group(),
+      '06': new THREE.Group(),
+      '07': new THREE.Group(),
+      '08': new THREE.Group(),
     };
     Object.values(treeGroups).forEach(g => rootAssembly.add(g));
 
@@ -1074,7 +1300,7 @@
     const Z_SB3 = -11.0;
     const Z_BACK_CARD = -19.0;
 
-    // List of interactive meshes for raycasting tap selection
+    // Interactive Meshes List for Raycasting
     const interactiveMeshes = [];
 
     function tagMesh(mesh, nodeId, partName) {
@@ -1144,7 +1370,7 @@
 
     const sdSlot = new THREE.Mesh(new THREE.BoxGeometry(16, 18, 2.8), matMetal);
     sdSlot.position.set(16, -18, Z_SB1 + 4.6);
-    tagMesh(sdSlot, '03', 'MicroSD Push-Push Card Socket');
+    tagMesh(sdSlot, '03', 'MicroSD Card Slot');
     treeGroups['03'].add(sdSlot);
 
     const cardMesh = new THREE.Mesh(new THREE.BoxGeometry(11, 14, 1.0), matButton);
@@ -1196,7 +1422,7 @@
 
     const rfMesh = new THREE.Mesh(new THREE.BoxGeometry(18, 25, 2.5), matMetal);
     rfMesh.position.set(0, 12, Z_SB2 + 4.4);
-    tagMesh(rfMesh, '04', 'Metal RF Shielding Can');
+    tagMesh(rfMesh, '04', 'RF Shielding Can');
     treeGroups['04'].add(rfMesh);
 
     const usbMesh = new THREE.Mesh(new THREE.BoxGeometry(8, 7, 3.2), matMetal);
@@ -1446,12 +1672,11 @@
       }
     };
 
-    // Build Model Tree HTML for Desktop and Mobile
     function generateTreeHTML(containerId) {
       let html = `
         <div class="tree-root-item">
           <span>📄 ai_pendant_mvp</span>
-          <span style="font-size:0.68rem; color:#38bdf8;">Octagonal 62×90×38mm</span>
+          <span style="font-size:0.68rem; color:var(--accent);">Octagonal 62×90×38mm</span>
         </div>
       `;
       Object.keys(nodeMetadata).forEach(id => {
@@ -1524,7 +1749,6 @@
       updateExplodeDisplays(expVal);
 
       if (mode === 'earlier') {
-        // Complete solid product view (DEFAULT FIRST)
         fMesh.material = matCardboardSolid;
         wallsMesh.material = matCardboardEdgeSolid;
         bMesh.material = matCardboardSolid;
@@ -1532,7 +1756,6 @@
         toggleAllLayers(true);
         updateDetailCard('earlier');
       } else if (mode === 'xray') {
-        // Translucent internal view
         fMesh.material = matCardboardGlass;
         wallsMesh.material = matCardboardEdgeGlass;
         bMesh.material = matCardboardGlass;
@@ -1540,14 +1763,12 @@
         toggleAllLayers(true);
         updateDetailCard('xray');
       } else if (mode === 'tree') {
-        // Model tree view with translucent enclosure
         fMesh.material = matCardboardGlass;
         wallsMesh.material = matCardboardEdgeGlass;
         bMesh.material = matCardboardGlass;
         stackGuideLine.visible = false;
         updateDetailCard('tree');
       } else if (mode === 'exploded') {
-        // Exploded view
         fMesh.material = matCardboardSolid;
         wallsMesh.material = matCardboardEdgeSolid;
         bMesh.material = matCardboardSolid;
@@ -1582,7 +1803,6 @@
       stackGuideLine.visible = (f > 0.05);
     });
 
-    // Select Component Node
     function selectNode(nodeId) {
       document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('selected'));
       document.querySelectorAll('#node-' + nodeId).forEach(n => n.classList.add('selected'));
@@ -1590,7 +1810,6 @@
       const info = nodeMetadata[nodeId];
       if (!info) return;
 
-      // Update Desktop details
       document.getElementById('detail-title-icon-desktop').textContent = info.icon;
       document.getElementById('detail-title-desktop').textContent = info.title;
       document.getElementById('card-heading-desktop').textContent = info.title;
@@ -1604,7 +1823,6 @@
         tableEl.appendChild(tr);
       });
 
-      // If mobile drawer is open to details or tree, update it
       const mobileDetails = document.getElementById('mobile-details-content');
       if (mobileDetails) {
         mobileDetails.innerHTML = getDetailsHTML(info);
@@ -1676,7 +1894,6 @@
       const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
       const dist = Math.hypot(clientX - touchStartX, clientY - touchStartY);
 
-      // Only treat as click/tap if it wasn't a drag/orbit gesture
       if (dt < 300 && dist < 12) {
         mouse.x = (clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(clientY / window.innerHeight) * 2 + 1;
@@ -1689,20 +1906,16 @@
             const nodeId = hit.userData.nodeId;
             selectNode(nodeId);
 
-            // Special interactive operation if tapping specific controls
             if (hit.userData.partName === 'White Power Switch Plunger') {
               togglePowerSwitch();
             } else if (hit.userData.partName === 'Voice Record Push Button') {
               triggerPushAction();
             } else {
-              // Open mobile details drawer on tap if on smartphone
-              if (window.innerWidth <= 860) {
+              if (window.innerWidth <= 1024) {
                 openDrawer('details');
               }
             }
 
-            // Brief pulse highlight
-            const origMat = hit.material;
             if (hit.material && hit.material.emissive) {
               const oldEm = hit.material.emissive.getHex();
               hit.material.emissive.setHex(0x38bdf8);
@@ -1747,7 +1960,6 @@
       const statusColor = isPowerOn ? '#22c55e' : '#ef4444';
       const clickyText = isPowerOn ? 'ON' : 'OFF';
 
-      // Update Desktop & Mobile UI
       ['desktop', 'mobile'].forEach(suffix => {
         const pwrBtn = document.getElementById(`pwr-clicky-btn-${suffix}`);
         const pwrTxt = document.getElementById(`clicky-text-${suffix}`);
@@ -1771,11 +1983,11 @@
       });
 
       if (isPowerOn) {
-        whitePlungerMesh.position.z = Z_FRONT_CARD + 1.6; // Latched down
+        whitePlungerMesh.position.z = Z_FRONT_CARD + 1.6;
         matLED.emissive.setHex(0x00aacc);
         matLED.emissiveIntensity = 0.8;
       } else {
-        whitePlungerMesh.position.z = Z_FRONT_CARD + 3.4; // Sprung up
+        whitePlungerMesh.position.z = Z_FRONT_CARD + 3.4;
         matLED.emissive.setHex(0x000000);
         matLED.emissiveIntensity = 0.0;
         isRecording = false;
@@ -1800,15 +2012,14 @@
       if (isRecording) {
         matLED.emissive.setHex(0x00ffff);
         matLED.emissiveIntensity = 3.0;
-        btnMesh.position.z = Z_FRONT_CARD + 1.2; // depressed
+        btnMesh.position.z = Z_FRONT_CARD + 1.2;
       } else {
         matLED.emissive.setHex(0x00aacc);
         matLED.emissiveIntensity = 0.8;
-        btnMesh.position.z = Z_FRONT_CARD + 2.5; // released
+        btnMesh.position.z = Z_FRONT_CARD + 2.5;
       }
     }
 
-    // Camera Presets
     function setCam(mode) {
       controls.reset();
       switch (mode) {
@@ -1849,27 +2060,27 @@
           <div class="controls-sim-box">
             <div class="sim-row" style="margin-bottom:12px;">
               <div>
-                <div style="font-size:0.8rem; font-weight:700; color:#fff;">1. White Power Switch</div>
+                <div style="font-size:0.8rem; font-weight:700; color:var(--text);">1. White Power Switch</div>
                 <div style="font-size:0.72rem; color:${isPowerOn ? '#22c55e' : '#ef4444'};" id="pwr-status-text-mobile">
                   ${isPowerOn ? 'State: Latched ON' : 'State: Popped OFF'}
                 </div>
               </div>
-              <button class="btn-clicky-ui ${isPowerOn ? 'latched' : ''}" id="pwr-clicky-btn-mobile" onclick="togglePowerSwitch()">
+              <button class="btn-clicky-ui ${isPowerOn ? 'latched' : ''}" id="pwr-clicky-btn-mobile" onclick="togglePowerSwitch()" aria-label="Toggle Power Switch">
                 <span>⚡</span> <span id="clicky-text-mobile">${isPowerOn ? 'ON' : 'OFF'}</span>
               </button>
             </div>
-            <div style="height:1px; background:#1e293b; margin:12px 0;"></div>
+            <div style="height:1px; background:var(--panel-border); margin:12px 0;"></div>
             <div class="sim-row">
               <div style="display:flex; align-items:center; gap:8px;">
                 <div class="led-indicator-dot ${isPowerOn ? 'active' : ''}" id="sim-led-mobile"></div>
                 <div>
-                  <div style="font-size:0.8rem; font-weight:700; color:#fff;">2. Voice Record Button</div>
-                  <div style="font-size:0.72rem; color:#38bdf8;" id="record-status-text-mobile">
+                  <div style="font-size:0.8rem; font-weight:700; color:var(--text);">2. Voice Record Button</div>
+                  <div style="font-size:0.72rem; color:var(--accent);" id="record-status-text-mobile">
                     ${isRecording ? '<span style="color:#00e5ff; font-weight:700;">● RECORDING AUDIO</span>' : (isPowerOn ? 'Ready for trigger' : 'Power is OFF')}
                   </div>
                 </div>
               </div>
-              <button class="btn-push-ui" id="push-btn-mobile" onclick="triggerPushAction()" ${!isPowerOn ? 'disabled style="opacity:0.5;"' : ''}>
+              <button class="btn-push-ui" id="push-btn-mobile" onclick="triggerPushAction()" ${!isPowerOn ? 'disabled style="opacity:0.5;"' : ''} aria-label="Push Voice Recording Button">
                 🎙️ PUSH
               </button>
             </div>
@@ -1883,7 +2094,7 @@
               <span>Z-Stack Separation:</span>
               <span class="val" id="explode-display-mobile">0 mm</span>
             </div>
-            <input type="range" id="explode-range-mobile" min="0" max="100" value="${document.getElementById('explode-range-desktop').value}">
+            <input type="range" id="explode-range-mobile" min="0" max="100" value="${document.getElementById('explode-range-desktop').value}" aria-label="Explosion separation slider">
           </div>
           <div class="btn-grid-4" style="margin-top:12px;">
             <button class="btn-camera" onclick="setCam('iso')">Isometric</button>
@@ -1920,6 +2131,14 @@
       document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
     }
 
+    // Legal Modal Controls
+    function openLegalModal() {
+      document.getElementById('legal-modal').classList.add('open');
+    }
+    function closeLegalModal(e) {
+      document.getElementById('legal-modal').classList.remove('open');
+    }
+
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -1943,7 +2162,8 @@
       if (hint) hint.style.opacity = '0';
     }, 5000);
 
-    // DEFAULT ON PAGE LOAD: Complete Assembled Product (Solid Earlier View)
+    // Initializations
+    initTheme();
     selectNode('01');
     setViewMode('earlier');
   </script>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://akcodes-py.github.io/ai_pendant_3d_view/sitemap.xml
