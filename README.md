@@ -19,12 +19,12 @@ An interactive, high-fidelity 3D web viewer and parametric CAD assembly model fo
   - **Starboard Perfboards**: Double-sided gold donut solder pads at standard $2.54\text{ mm}$ pitch.
 - **Dual Front Controls & Indicator**:
   1. **5mm Blue Indicator LED**: Located at upper-center ($Y=72\text{ mm}$).
-  2. **Round Push Button Switch**: Located at mid-center ($Y=46\text{ mm}$) for thumb voice recording trigger.
-  3. **ON/OFF Power Slide Switch**: Located at lower-center ($Y=24\text{ mm}$) to disconnect battery power.
+  2. **Round Voice Push Button Switch**: Located at mid-center ($Y=46\text{ mm}$) for thumb voice recording trigger.
+  3. **White Push-Push Latching Power Switch**: Located at lower-center ($Y=24\text{ mm}$). Features white nylon stepped collar, round plunger, and dual horizontal solder tabs. Latches down on click (ON) and springs up on click (OFF) to cut battery power.
   4. **Upper-Side Microphone Sound Pinhole**: Located on the top-left shoulder ($Y=74\text{ mm}$) with golden bezel ring.
 - **Interactive Controls Simulator**:
-  - **Toggle ON/OFF Switch**: Sliding to OFF cuts circuit power and dims the LED; sliding to ON energizes the system.
-  - **Press Push Button**: Depresses the 3D button and activates **`RECORDING AUDIO`** mode with a pulsing Blue LED.
+  - **Click White Power Switch**: Plunger physically latches down in 3D (ON) and energizes the circuit & Blue LED; clicking again pops it up (OFF) and cuts power.
+  - **Press Voice Button**: Depresses the 3D button and activates **`RECORDING AUDIO`** mode with a pulsing Blue LED.
 - **Vertical Layer Explosion Slider**:
   - Drag the slider from $0\text{ mm}$ (fully assembled) to $75\text{ mm}$ (exploded view) to pull apart all 3 Starboard decks and cardboard covers in mid-air.
 - **Layer Isolation Filtering**:
@@ -42,6 +42,7 @@ An interactive, high-fidelity 3D web viewer and parametric CAD assembly model fo
 | **Boost Converter (3V→5V)** | 4.5 | 2.3 | 1.5 | **$45 \times 23 \times 15\text{ mm}$** | **Deck 3 (Bottom / Power)** |
 | **TP4056 Battery Charger** | 3.0 | 1.8 | 0.3 | **$30 \times 18 \times 3\text{ mm}$** | **Deck 3 (Bottom / Power)** |
 | **800mAh Li-Po Battery** | 3.7 | 2.5 | 0.5 | **$37 \times 25 \times 5\text{ mm}$** | **Deck 3 (Bottom / Power)** |
+| **White Latching Switch** | 0.8 | 0.8 | 0.7 | **$8 \times 8 \times 7\text{ mm}$** | **Deck 1 (Front Power)** |
 | **Front Controls** | — | — | — | **$\varnothing 5\text{mm}$ LED, $\varnothing 7\text{mm}$ Button** | **Front Faceplate** |
 
 ---
@@ -52,8 +53,8 @@ An interactive, high-fidelity 3D web viewer and parametric CAD assembly model fo
 ┌────────────────────────────────────────────────────────┐
 │  PLATE 1: FRONT CARDBOARD FACEPLATE (2.0 mm)           │
 │  - Hole 1: 5mm Blue LED Dome (Ø5.0 mm at Y=72)         │
-│  - Hole 2: Round Push Button Cap (Ø7.0 mm at Y=46)     │
-│  - Hole 3: ON/OFF Slide Switch Slot (8.5×4 mm at Y=24) │
+│  - Hole 2: Round Voice Push Button Cap (Ø7.0 mm at Y=46)│
+│  - Hole 3: White Latching Switch Opening (Ø5.8 mm, Y=24)│
 │  - Hole 4: Upper-Side Mic Sound Pinhole (Ø1.8 mm)      │
 └────────────────────────────────────────────────────────┘
                            │
@@ -61,7 +62,8 @@ An interactive, high-fidelity 3D web viewer and parametric CAD assembly model fo
 │  PLATE 2: STARBOARD 1 (FRONT DECK: MIC + SD + CONTROLS)│
 │  - INMP441 MEMS Mic on UPPER SIDE facing front hole    │
 │  - MicroSD Card Adapter (50 × 25 × 10 mm) on side edge │
-│  - 5mm Blue LED + Round Push Button + ON/OFF Switch    │
+│  - 5mm Blue LED + Round Voice Button                   │
+│  - White Latching Push-Push Power Switch with tabs     │
 └────────────────────────────────────────────────────────┘
                            │  (8.4 mm Brass Standoffs)
 ┌────────────────────────────────────────────────────────┐
@@ -94,7 +96,7 @@ An interactive, high-fidelity 3D web viewer and parametric CAD assembly model fo
             ▼
 [ TP4056 USB-C Charger (BAT+ / BAT-) ]
             │
-    (ON/OFF Slide Switch) ──> Intercepts positive rail
+    (White Latching Switch) ──> Intercepts positive rail via horizontal side solder tabs
             │
             ▼
 [ MT3608 DC-DC Step-Up Converter (IN+ / IN-) ]
@@ -109,23 +111,6 @@ An interactive, high-fidelity 3D web viewer and parametric CAD assembly model fo
     └──> 5mm Blue LED (Anode to GPIO 2 via 220Ω, Cathode to GND)
 ```
 
-| Component | Pin | ESP32-S3 Pin | Function |
-| :--- | :--- | :--- | :--- |
-| **INMP441 MEMS Mic** | VDD | 3V3 | 3.3V Clean Power |
-| | GND | GND | System Ground |
-| | SD | GPIO 32 | I2S Serial Data |
-| | WS | GPIO 15 | Word Select (Clock) |
-| | SCK | GPIO 14 | Bit Clock |
-| **MicroSD Module** | VCC | 5V Bus | 5V Regulated Power |
-| | GND | GND | Common Ground |
-| | CS | GPIO 5 | SPI Chip Select |
-| | SCK | GPIO 18 | SPI Clock |
-| | MOSI | GPIO 23 | SPI Master Out |
-| | MISO | GPIO 19 | SPI Master In |
-| **Controls** | Push Button | GPIO 0 | Voice / Trigger (Internal Pull-Up) |
-| | Blue LED | GPIO 2 | Recording indicator (via 220Ω) |
-| | ON/OFF Switch | TP4056 OUT+ | Physical battery power cut |
-
 ---
 
 ## 🚀 How to Run Locally
@@ -135,7 +120,7 @@ An interactive, high-fidelity 3D web viewer and parametric CAD assembly model fo
    git clone https://github.com/akcodes-py/ai_pendant_3d_view.git
    cd ai_pendant_3d_view
    ```
-2. Open [`index.html`](index.html) or [`ai_pendant_3d_viewer.html`](ai_pendant_3d_viewer.html) in any modern browser (Chrome, Edge, Firefox, Safari). No installation or build steps required.
+2. Open [`index.html`](index.html) or [`ai_pendant_3d_viewer.html`](ai_pendant_3d_viewer.html) in any modern browser.
 
 ---
 

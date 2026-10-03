@@ -1,10 +1,7 @@
 # ============================================================
 # Brain2 AI Pendant - 3-Starboard Stacked Architecture
-# Front Controls:
-# 1. Indicator LED (5mm Blue)
-# 2. Push Button (Round Tactile for Voice / AI trigger)
-# 3. ON/OFF Power Switch (Slide Switch with ON/OFF toggle)
-# 4. Upper-Side INMP441 MEMS Microphone
+# Updated: Front ON/OFF Switch is a White Latching Push-Push
+# Button (stepped cylindrical collar, round plunger, side tabs)
 # ============================================================
 import FreeCAD
 import Part
@@ -18,13 +15,13 @@ if doc_name in FreeCAD.listDocuments():
 doc = FreeCAD.newDocument(doc_name)
 
 # ------------------------------------------------------------
-# 1. PARAMETERS & EXACT HAND-SCALE MEASUREMENTS (mm)
+# 1. PARAMETERS & EXACT MEASUREMENTS (mm)
 # ------------------------------------------------------------
 CARDBOARD_T = 2.0
 STARBOARD_T = 1.6
 CHAMFER_C   = 8.0
 
-# Exact user measurements
+# Components (Hand-scale measured)
 ESP32_L = 70.0; ESP32_W = 39.0; ESP32_H = 10.0
 SD_L    = 50.0; SD_W    = 25.0; SD_H    = 10.0
 BAT_L   = 37.0; BAT_W   = 25.0; BAT_H   = 5.0
@@ -33,11 +30,11 @@ BST_L   = 45.0; BST_W   = 23.0; BST_H   = 15.0
 MIC_L   = 14.0; MIC_W   = 11.0; MIC_H   = 3.5
 
 # Controls
-BUTTON_DIA   = 7.0
-LED_DIA      = 5.0
-SWITCH_L     = 8.5    # ON/OFF Slide switch length
-SWITCH_W     = 4.0    # ON/OFF Slide switch width
-SWITCH_H     = 5.0    # Switch body height
+BUTTON_DIA     = 7.0   # Momentary Voice Button
+LED_DIA        = 5.0   # 5mm Blue LED
+ONOFF_BASE_W   = 8.0   # Latching power switch base
+ONOFF_COLLAR_D = 5.6   # Stepped circular boss
+ONOFF_PLUNGER_D= 3.8   # Round white push plunger
 
 STARBOARD_W = 54.0
 STARBOARD_L = 82.0
@@ -48,10 +45,10 @@ PENDANT_D = 38.0                                  # 38 mm
 
 # Z Stack-up
 Z_BACK_CARD   = 0.0
-Z_STARBOARD_3 = Z_BACK_CARD + CARDBOARD_T + 1.0           # Power Layer: Battery, Booster, TP4056
-Z_STARBOARD_2 = Z_STARBOARD_3 + STARBOARD_T + 14.0        # Middle Layer: ESP32 DevKit
-Z_STARBOARD_1 = Z_STARBOARD_2 + STARBOARD_T + ESP32_H + 1.0 # Front Layer: Upper Mic + SD + Push Button + ON/OFF Switch + LED
-Z_FRONT_CARD  = PENDANT_D - CARDBOARD_T                   # Front Cardboard Cover
+Z_STARBOARD_3 = Z_BACK_CARD + CARDBOARD_T + 1.0
+Z_STARBOARD_2 = Z_STARBOARD_3 + STARBOARD_T + 14.0
+Z_STARBOARD_1 = Z_STARBOARD_2 + STARBOARD_T + ESP32_H + 1.0
+Z_FRONT_CARD  = PENDANT_D - CARDBOARD_T
 
 # Colors
 C_CARDBOARD = (0.78, 0.62, 0.44, 0.0)
@@ -66,7 +63,7 @@ C_TP        = (0.12, 0.52, 0.20, 0.0)
 C_BST       = (0.75, 0.20, 0.15, 0.0)
 C_LED       = (0.00, 0.82, 1.00, 0.1)
 C_BTN       = (0.12, 0.12, 0.12, 0.0)
-C_SWITCH    = (0.85, 0.20, 0.20, 0.0)  # Red actuator switch knob
+C_WHITE_SW  = (0.94, 0.94, 0.92, 0.0)  # White nylon switch body
 C_STANDOFF  = (0.88, 0.75, 0.25, 0.0)
 C_DIM       = (0.95, 0.20, 0.10, 0.0)
 
@@ -105,20 +102,17 @@ g_dims  = doc.addObject("App::DocumentObjectGroup", "08_Dimensions_and_Measureme
 SB_X = (PENDANT_W - STARBOARD_W) / 2.0
 SB_Y = (PENDANT_H - STARBOARD_L) / 2.0
 
-# Front Controls Placement:
-# 1. Blue LED: Upper Center (Y = 72 mm)
+# Coordinates for Front Elements:
 LED_X = PENDANT_W / 2.0
 LED_Y = PENDANT_H * 0.74
 
-# 2. Push Button: Middle Center (Y = 46 mm)
 BTN_X = PENDANT_W / 2.0
 BTN_Y = PENDANT_H * 0.48
 
-# 3. ON/OFF Power Switch: Lower Center (Y = 24 mm)
+# White Push Latching ON/OFF switch (Lower center)
 SW_X = PENDANT_W / 2.0
 SW_Y = PENDANT_H * 0.24
 
-# 4. Upper Side Microphone: Top Left (Y = 74 mm)
 MIC_X = SB_X + 4.0
 MIC_Y = SB_Y + STARBOARD_L - MIC_L - 4.0
 
@@ -129,13 +123,13 @@ f_face = create_octagonal_face(PENDANT_W, PENDANT_H, CHAMFER_C, Z_FRONT_CARD)
 f_solid = f_face.extrude(FreeCAD.Vector(0, 0, CARDBOARD_T))
 
 # Holes:
-# Hole 1: Blue LED
+# Hole 1: Blue LED (Ø5.0 mm)
 hole_led = Part.makeCylinder(LED_DIA / 2.0 + 0.3, CARDBOARD_T + 2.0, FreeCAD.Vector(LED_X, LED_Y, Z_FRONT_CARD - 1.0))
-# Hole 2: Push Button
+# Hole 2: Voice Push Button (Ø7.0 mm)
 hole_btn = Part.makeCylinder(BUTTON_DIA / 2.0 + 0.5, CARDBOARD_T + 2.0, FreeCAD.Vector(BTN_X, BTN_Y, Z_FRONT_CARD - 1.0))
-# Hole 3: ON/OFF Slide Switch slot
-hole_sw  = Part.makeBox(SWITCH_L + 1.0, SWITCH_W + 1.0, CARDBOARD_T + 2.0, FreeCAD.Vector(SW_X - (SWITCH_L+1.0)/2.0, SW_Y - (SWITCH_W+1.0)/2.0, Z_FRONT_CARD - 1.0))
-# Hole 4: Upper Microphone Sound Port
+# Hole 3: White Latching ON/OFF Switch opening (Ø5.8 mm round collar hole)
+hole_sw  = Part.makeCylinder(ONOFF_COLLAR_D / 2.0 + 0.3, CARDBOARD_T + 2.0, FreeCAD.Vector(SW_X, SW_Y, Z_FRONT_CARD - 1.0))
+# Hole 4: Upper Microphone Sound Port (Ø1.8 mm)
 hole_mic = Part.makeCylinder(1.5, CARDBOARD_T + 2.0, FreeCAD.Vector(MIC_X + MIC_W/2.0, MIC_Y + MIC_L/2.0, Z_FRONT_CARD - 1.0))
 
 f_solid = f_solid.cut(hole_led).cut(hole_btn).cut(hole_sw).cut(hole_mic)
@@ -145,7 +139,7 @@ set_view(f_obj, C_CARDBOARD)
 g_front.addObject(f_obj)
 
 # ============================================================
-# 2. FRONT CONTROLS (BLUE LED + PUSH BUTTON + ON/OFF SWITCH)
+# 2. FRONT CONTROLS (BLUE LED + VOICE PUSH BUTTON + WHITE LATCHING ON/OFF)
 # ============================================================
 # 1. Blue LED
 led_d = Part.makeSphere(LED_DIA / 2.0, FreeCAD.Vector(LED_X, LED_Y, Z_FRONT_CARD + CARDBOARD_T + 0.5))
@@ -155,7 +149,7 @@ led_obj.Shape = led_b.fuse(led_d)
 set_view(led_obj, C_LED)
 g_ctrl.addObject(led_obj)
 
-# 2. Push Button (Round Tactile Switch for Voice / Trigger)
+# 2. Voice Push Button (Tactile Momentary)
 btn_base = Part.makeBox(8.0, 8.0, 4.0, FreeCAD.Vector(BTN_X - 4.0, BTN_Y - 4.0, Z_STARBOARD_1 + STARBOARD_T))
 btn_cap = Part.makeCylinder(BUTTON_DIA / 2.0, CARDBOARD_T + 5.0, FreeCAD.Vector(BTN_X, BTN_Y, Z_STARBOARD_1 + STARBOARD_T + 2.0))
 btn_obj = doc.addObject("Part::Feature", "Control_02_Push_Button_Switch")
@@ -163,15 +157,27 @@ btn_obj.Shape = btn_base.fuse(btn_cap)
 set_view(btn_obj, C_BTN)
 g_ctrl.addObject(btn_obj)
 
-# 3. ON/OFF Power Switch (Miniature Slide Switch)
-sw_body = Part.makeBox(SWITCH_L, SWITCH_W, 3.5, FreeCAD.Vector(SW_X - SWITCH_L/2.0, SW_Y - SWITCH_W/2.0, Z_STARBOARD_1 + STARBOARD_T))
-sw_bracket = Part.makeBox(SWITCH_L + 3.0, SWITCH_W + 1.0, 0.8, FreeCAD.Vector(SW_X - (SWITCH_L+3.0)/2.0, SW_Y - (SWITCH_W+1.0)/2.0, Z_STARBOARD_1 + STARBOARD_T + 3.5))
-sw_lever = Part.makeBox(2.5, 2.5, CARDBOARD_T + 4.0, FreeCAD.Vector(SW_X - 1.25, SW_Y - 1.25, Z_STARBOARD_1 + STARBOARD_T + 3.5))
-sw_full = sw_body.fuse(sw_bracket).fuse(sw_lever)
-sw_obj = doc.addObject("Part::Feature", "Control_03_ON_OFF_Power_Switch")
-sw_obj.Shape = sw_full
-set_view(sw_obj, C_SWITCH)
+# 3. White Latching Push-Push ON/OFF Switch (Matching user photograph)
+# Rectangular white nylon body
+sw_base = Part.makeBox(ONOFF_BASE_W, ONOFF_BASE_W, 3.2, FreeCAD.Vector(SW_X - ONOFF_BASE_W/2.0, SW_Y - ONOFF_BASE_W/2.0, Z_STARBOARD_1 + STARBOARD_T))
+# Stepped circular boss / collar
+sw_collar = Part.makeCylinder(ONOFF_COLLAR_D / 2.0, 2.5, FreeCAD.Vector(SW_X, SW_Y, Z_STARBOARD_1 + STARBOARD_T + 3.2))
+# Round white plunger button extending through front panel
+sw_plunger = Part.makeCylinder(ONOFF_PLUNGER_D / 2.0, CARDBOARD_T + 4.0, FreeCAD.Vector(SW_X, SW_Y, Z_STARBOARD_1 + STARBOARD_T + 4.0))
+# Horizontal solder wings / tabs extending left and right
+sw_tab_left = Part.makeBox(3.5, 1.2, 0.4, FreeCAD.Vector(SW_X - ONOFF_BASE_W/2.0 - 3.5, SW_Y - 0.6, Z_STARBOARD_1 + STARBOARD_T + 0.2))
+sw_tab_right = Part.makeBox(3.5, 1.2, 0.4, FreeCAD.Vector(SW_X + ONOFF_BASE_W/2.0, SW_Y - 0.6, Z_STARBOARD_1 + STARBOARD_T + 0.2))
+
+sw_white_parts = sw_base.fuse(sw_collar).fuse(sw_plunger)
+sw_obj = doc.addObject("Part::Feature", "Control_03_White_Latching_Push_Switch")
+sw_obj.Shape = sw_white_parts
+set_view(sw_obj, C_WHITE_SW)
 g_ctrl.addObject(sw_obj)
+
+sw_tabs = doc.addObject("Part::Feature", "Control_03_Switch_Solder_Tabs")
+sw_tabs.Shape = sw_tab_left.fuse(sw_tab_right)
+set_view(sw_tabs, C_METAL)
+g_ctrl.addObject(sw_tabs)
 
 # ============================================================
 # 3. STARBOARD 1 (TOP DECK): UPPER MIC + MICROSD CARD READER
@@ -183,14 +189,14 @@ sb1_obj.Shape = sb1_solid
 set_view(sb1_obj, C_STARBOARD)
 g_sb1.addObject(sb1_obj)
 
-# INMP441 MEMS Mic on UPPER SIDE (14 x 11 x 3.5 mm)
+# INMP441 MEMS Mic on UPPER SIDE
 mic_box = Part.makeBox(MIC_W, MIC_L, MIC_H, FreeCAD.Vector(MIC_X, MIC_Y, Z_STARBOARD_1 + STARBOARD_T))
 mic_obj = doc.addObject("Part::Feature", "INMP441_Upper_MEMS_Mic_14x11mm")
 mic_obj.Shape = mic_box
 set_view(mic_obj, C_MIC)
 g_sb1.addObject(mic_obj)
 
-# MicroSD Card Reader on Starboard 1 (50 x 25 x 10 mm)
+# MicroSD Card Reader on Starboard 1
 SD_X = SB_X + STARBOARD_W - SD_W - 3.0
 SD_Y = SB_Y + 6.0
 sd_pcb = Part.makeBox(SD_W, SD_L, 1.6, FreeCAD.Vector(SD_X, SD_Y, Z_STARBOARD_1 + STARBOARD_T))
@@ -360,4 +366,4 @@ doc.recompute()
 
 out_fcstd = r"C:\Users\Atul Kumar\Desktop\brain2-pendant-cad\ai_pendant_mvp.FCStd"
 doc.saveAs(out_fcstd)
-print(f"SUCCESS: Front controls (LED + Push Button + ON/OFF Switch) saved to {out_fcstd}")
+print(f"SUCCESS: White Latching Switch model saved to {out_fcstd}")

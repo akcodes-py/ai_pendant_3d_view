@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brain2 AI Pendant - Dual Front Controls (Push Button + ON/OFF Switch + LED + Upper Mic)</title>
+  <title>Brain2 AI Pendant - White Latching Push-Push Power Switch + Voice Button + Blue LED</title>
   <style>
     :root {
       --bg: #090d16;
@@ -78,14 +78,14 @@
     #controls-panel {
       top: 75px;
       left: 18px;
-      width: 330px;
+      width: 335px;
       max-height: calc(100vh - 95px);
       overflow-y: auto;
     }
     #details-panel {
       top: 14px;
       right: 18px;
-      width: 360px;
+      width: 365px;
       max-height: calc(100vh - 35px);
       overflow-y: auto;
     }
@@ -205,30 +205,27 @@
     .sim-row:last-child {
       margin-bottom: 0;
     }
-    .toggle-switch-ui {
-      width: 44px;
-      height: 22px;
-      background: #334155;
-      border-radius: 999px;
-      position: relative;
+    .btn-clicky-ui {
+      background: #f1f5f9;
+      border: 2px solid #cbd5e1;
+      color: #0f172a;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: all 0.15s;
     }
-    .toggle-switch-ui.on {
-      background: #16a34a;
-    }
-    .toggle-knob {
-      width: 16px;
-      height: 16px;
-      background: #fff;
-      border-radius: 50%;
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      transition: all 0.2s;
-    }
-    .toggle-switch-ui.on .toggle-knob {
-      left: 25px;
+    .btn-clicky-ui.latched {
+      background: #22c55e;
+      border-color: #16a34a;
+      color: #fff;
+      transform: translateY(2px);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
     }
     .btn-push-ui {
       background: #1e293b;
@@ -333,7 +330,7 @@
 <body>
 
   <header>
-    <h1>Brain2 AI Pendant <span>Dual Front Controls (Push + ON/OFF Switch)</span></h1>
+    <h1>Brain2 AI Pendant <span>White Latching Power Switch + Push Button</span></h1>
     <span class="badge-stack">Stacked Architecture</span>
   </header>
 
@@ -348,21 +345,21 @@
 
     <!-- Dual Button Simulator Box -->
     <div class="controls-sim-box">
-      <!-- 1. ON/OFF Power Slide Switch -->
+      <!-- 1. White Latching Push-Push ON/OFF Power Switch -->
       <div class="sim-row">
         <div>
-          <div style="font-size:0.8rem; font-weight:700;">1. Power ON/OFF Switch</div>
-          <div style="font-size:0.68rem; color:#94a3b8;" id="pwr-status-text">State: ON (Power Active)</div>
+          <div style="font-size:0.8rem; font-weight:700;">1. White Power Switch</div>
+          <div style="font-size:0.68rem; color:#94a3b8;" id="pwr-status-text">State: Latched ON (Power Active)</div>
         </div>
-        <div class="toggle-switch-ui on" id="pwr-switch-btn" onclick="togglePowerSwitch()">
-          <div class="toggle-knob"></div>
-        </div>
+        <button class="btn-clicky-ui latched" id="pwr-clicky-btn" onclick="togglePowerSwitch()">
+          <span id="clicky-icon">●</span> <span id="clicky-text">ON</span>
+        </button>
       </div>
 
       <!-- 2. Push Button (Voice / AI Record) -->
       <div class="sim-row" style="margin-top: 8px;">
         <div>
-          <div style="font-size:0.8rem; font-weight:700;">2. Push Button</div>
+          <div style="font-size:0.8rem; font-weight:700;">2. Voice Push Button</div>
           <div style="font-size:0.68rem; color:#94a3b8;" id="record-status-text">Ready for trigger</div>
         </div>
         <button class="btn-push-ui" id="push-btn" onclick="triggerPushAction()">Press Button</button>
@@ -435,33 +432,43 @@
   <div class="overlay-panel" id="details-panel">
     <div class="section-title">
       <span>Front Controls Specification</span>
-      <span style="color:#fbbf24;">Front Face</span>
+      <span style="color:#fbbf24;">Hardware Match</span>
     </div>
 
     <table class="specs-table">
       <thead>
-        <tr><th>Control Item</th><th>Type</th><th>Location</th><th>Wiring</th></tr>
+        <tr><th>Control Item</th><th>Physical Component</th><th>Location</th><th>Wiring</th></tr>
       </thead>
       <tbody>
         <tr><td><strong>1. Indicator LED</strong></td><td>5mm Blue Through-hole</td><td>Upper Center (Y=72mm)</td><td class="val-dim">GPIO 2 (220Ω)</td></tr>
-        <tr><td><strong>2. Push Button</strong></td><td>Tactile Momentary</td><td>Mid Center (Y=46mm)</td><td class="val-dim">GPIO 0 / Pullup</td></tr>
-        <tr><td><strong>3. ON/OFF Switch</strong></td><td>Slide / Toggle Switch</td><td>Lower Center (Y=24mm)</td><td class="val-dim">Battery Power Cut</td></tr>
+        <tr><td><strong>2. Voice Button</strong></td><td>Round Tactile Momentary</td><td>Mid Center (Y=46mm)</td><td class="val-dim">GPIO 0 / Pullup</td></tr>
+        <tr><td><strong>3. Power Switch</strong></td><td>White Push-Push Latching</td><td>Lower Center (Y=24mm)</td><td class="val-dim">Li-Po Power Cut</td></tr>
         <tr><td><strong>4. Upper MEMS Mic</strong></td><td>INMP441 I2S Port</td><td>Top-Left (Y=74mm)</td><td class="val-dim">GPIO 14, 15, 32</td></tr>
       </tbody>
     </table>
 
     <div class="section-title">
-      <span>Stack Architecture Breakdown</span>
+      <span>White Latching Switch Details</span>
+    </div>
+
+    <!-- Switch Details Card -->
+    <div class="comp-info-card">
+      <h4><span style="color:#f8fafc;">⚪</span> White Push-Push Power Switch</h4>
+      <p>Matches your physical component in photograph:
+      <br>• <strong>White Nylon Body</strong>: 8 × 8 mm base with stepped collar ($\varnothing 5.6\text{ mm}$).
+      <br>• <strong>Round Plunger</strong>: $\varnothing 3.8\text{ mm}$ cylindrical button that latches down on click (ON) and springs up on second click (OFF).
+      <br>• <strong>Side Solder Tabs</strong>: Dual horizontal metal wing tabs extending $3.5\text{ mm}$ each side for in-line battery connection.</p>
+      <div class="pinout-tag">Circuit: Battery B+ → Side Tab 1 | Side Tab 2 → Boost IN+</div>
     </div>
 
     <!-- Deck 1 -->
     <div class="comp-info-card">
       <h4><span style="color:#22c55e;">●</span> Starboard 1 (Front Deck): Mic + SD + Controls</h4>
       <p>Directly beneath the front cardboard cover. Houses:
-      <br>• <strong>Upper-Side INMP441 Mic</strong> directly behind the top acoustic hole.
+      <br>• <strong>Upper-Side INMP441 Mic</strong> directly behind top acoustic hole.
       <br>• <strong>5mm Blue Indicator LED</strong> with dome extending through the front.
-      <br>• <strong>Round Push Button</strong> for thumb activation / AI trigger.
-      <br>• <strong>ON/OFF Power Slide Switch</strong> to turn the entire device on and off.
+      <br>• <strong>Round Voice Push Button</strong> for thumb activation / AI trigger.
+      <br>• <strong>White Latching Power Switch</strong> for system power control.
       <br>• <strong>MicroSD card reader</strong> on the side edge for direct card insertion.</p>
     </div>
 
@@ -479,7 +486,7 @@
   </div>
 
   <div class="bottom-hint">
-    Left Click + Drag to Rotate • Right Click to Pan • Scroll to Zoom • Toggle ON/OFF Switch or Press Button
+    Left Click + Drag to Rotate • Right Click to Pan • Scroll to Zoom • Click White Button to Toggle Power
   </div>
 
   <script>
@@ -675,7 +682,7 @@
     const matMetal = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.25, metalness: 0.9 });
     const matGold = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3, metalness: 0.85 });
     const matButton = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.4, metalness: 0.2 });
-    const matSwitchActuator = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3 }); // Red toggle knob
+    const matWhiteSwitch = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.35, metalness: 0.05 }); // White nylon
     const matLED = new THREE.MeshStandardMaterial({ color: 0x00e5ff, roughness: 0.1, emissive: 0x00aacc, emissiveIntensity: 0.8 });
     const matBrassStandoff = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.3, metalness: 0.8 });
 
@@ -710,7 +717,7 @@
     const SW = 54, SH = 82;
 
     const Z_FRONT_CARD = 17.0;
-    const Z_SB1 = 9.0;    // Deck 1: Upper Mic + SD + Push Button + ON/OFF Switch + LED
+    const Z_SB1 = 9.0;    // Deck 1: Upper Mic + SD + Push Button + White Latching Switch + LED
     const Z_SB2 = -1.0;   // Deck 2: ESP32-S3 DevKit
     const Z_SB3 = -11.0;  // Deck 3: Booster + Charger + Battery
     const Z_BACK_CARD = -19.0;
@@ -721,12 +728,10 @@
     const fShape = makeOctagon(PW, PH, 8);
     // 1. Blue LED hole (upper center)
     const hLED = new THREE.Path(); hLED.absarc(0, 22, 2.8, 0, Math.PI*2, true); fShape.holes.push(hLED);
-    // 2. Push Button hole (mid center)
+    // 2. Voice Push Button hole (mid center)
     const hBTN = new THREE.Path(); hBTN.absarc(0, -2, 3.8, 0, Math.PI*2, true); fShape.holes.push(hBTN);
-    // 3. ON/OFF Slide Switch slot (lower center)
-    const hSW = new THREE.Path();
-    hSW.moveTo(-5, -21); hSW.lineTo(5, -21); hSW.lineTo(5, -25); hSW.lineTo(-5, -25); hSW.closePath();
-    fShape.holes.push(hSW);
+    // 3. White Latching Power Switch round collar opening (lower center)
+    const hSW = new THREE.Path(); hSW.absarc(0, -23, 3.0, 0, Math.PI*2, true); fShape.holes.push(hSW);
     // 4. Upper Mic Sound Pinhole (top left)
     const hMIC = new THREE.Path(); hMIC.absarc(-16, 26, 1.8, 0, Math.PI*2, true); fShape.holes.push(hMIC);
 
@@ -741,19 +746,21 @@
     ledMesh.position.set(0, 22, Z_FRONT_CARD + 2.5);
     layerGroups.cardboard_front.add(ledMesh);
 
-    // 2. Round Push Button Cap
+    // 2. Round Voice Push Button Cap
     const btnMesh = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 3.0, 32), matButton);
     btnMesh.rotation.x = Math.PI/2;
     btnMesh.position.set(0, -2, Z_FRONT_CARD + 2.5);
     layerGroups.cardboard_front.add(btnMesh);
 
-    // 3. ON/OFF Power Switch (Slide Switch lever)
-    const swKnobGeom = new THREE.BoxGeometry(3.0, 3.0, 3.5);
-    const swKnobMesh = new THREE.Mesh(swKnobGeom, matSwitchActuator);
-    swKnobMesh.position.set(2.5, -23, Z_FRONT_CARD + 2.5); // "ON" position
-    layerGroups.cardboard_front.add(swKnobMesh);
+    // 3. White Latching Push-Push Power Button (Plunger)
+    // Matches the photo: round white plunger protruding through the front collar
+    const whitePlungerGeom = new THREE.CylinderGeometry(1.9, 1.9, 4.0, 24);
+    const whitePlungerMesh = new THREE.Mesh(whitePlungerGeom, matWhiteSwitch);
+    whitePlungerMesh.rotation.x = Math.PI/2;
+    whitePlungerMesh.position.set(0, -23, Z_FRONT_CARD + 1.6); // Latched ON position
+    layerGroups.cardboard_front.add(whitePlungerMesh);
 
-    // Decorative "ON" and "OFF" text indicators on front face
+    // Mic Bezel Ring
     const micRing = new THREE.Mesh(new THREE.RingGeometry(1.8, 2.8, 24), new THREE.MeshBasicMaterial({ color: 0xd97706, side: THREE.DoubleSide }));
     micRing.position.set(-16, 26, Z_FRONT_CARD + 2.05);
     layerGroups.cardboard_front.add(micRing);
@@ -784,15 +791,31 @@
     cardMesh.position.set(16, -26, Z_SB1 + 4.6);
     layerGroups.sb1.add(cardMesh);
 
-    // Push button tactile switch body on Starboard 1
+    // Voice Push button tactile switch body
     const btnBase = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 4), matButton);
     btnBase.position.set(0, -2, Z_SB1 + 2.8);
     layerGroups.sb1.add(btnBase);
 
-    // Slide switch body & metal bracket on Starboard 1
-    const swBase = new THREE.Mesh(new THREE.BoxGeometry(9, 4.5, 4), matMetal);
-    swBase.position.set(0, -23, Z_SB1 + 2.8);
-    layerGroups.sb1.add(swBase);
+    // White Latching Push-Push Power Switch Body & Tabs (Matching Photo!)
+    // Rectangular base body
+    const swBaseMesh = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 3.2), matWhiteSwitch);
+    swBaseMesh.position.set(0, -23, Z_SB1 + 2.4);
+    layerGroups.sb1.add(swBaseMesh);
+
+    // Stepped cylindrical collar / boss
+    const swCollarGeom = new THREE.CylinderGeometry(2.8, 2.8, 2.5, 24);
+    const swCollarMesh = new THREE.Mesh(swCollarGeom, matWhiteSwitch);
+    swCollarMesh.rotation.x = Math.PI/2;
+    swCollarMesh.position.set(0, -23, Z_SB1 + 5.0);
+    layerGroups.sb1.add(swCollarMesh);
+
+    // Silver side solder tabs / wings extending left and right (matching photo)
+    const tabGeom = new THREE.BoxGeometry(3.5, 1.2, 0.4);
+    const tabLeft = new THREE.Mesh(tabGeom, matMetal);
+    tabLeft.position.set(-5.75, -23, Z_SB1 + 1.8);
+    const tabRight = new THREE.Mesh(tabGeom, matMetal);
+    tabRight.position.set(5.75, -23, Z_SB1 + 1.8);
+    layerGroups.sb1.add(tabLeft); layerGroups.sb1.add(tabRight);
 
     // 4 Corner Brass Standoffs (Connecting SB1 to SB2)
     const standoffGeom = new THREE.CylinderGeometry(1.5, 1.5, 8.4, 16);
@@ -969,16 +992,19 @@
 
     function togglePowerSwitch() {
       isPowerOn = !isPowerOn;
-      const swBtn = document.getElementById('pwr-switch-btn');
-      const swText = document.getElementById('pwr-status-text');
+      const clickyBtn = document.getElementById('pwr-clicky-btn');
+      const clickyText = document.getElementById('clicky-text');
+      const pwrText = document.getElementById('pwr-status-text');
       const ledDot = document.getElementById('sim-led');
       const recText = document.getElementById('record-status-text');
       const pushBtn = document.getElementById('push-btn');
 
       if (isPowerOn) {
-        swBtn.classList.add('on');
-        swText.innerHTML = '<span style="color:#22c55e; font-weight:700;">State: ON (Power Active)</span>';
-        swKnobMesh.position.x = 2.5; // slide right to ON
+        // Latched down (ON)
+        clickyBtn.classList.add('latched');
+        clickyText.textContent = 'ON';
+        pwrText.innerHTML = '<span style="color:#22c55e; font-weight:700;">State: Latched ON (Power Active)</span>';
+        whitePlungerMesh.position.z = Z_FRONT_CARD + 1.6; // Latched down
         ledDot.classList.add('active');
         matLED.emissive.setHex(0x00aacc);
         matLED.emissiveIntensity = 0.8;
@@ -986,9 +1012,11 @@
         pushBtn.disabled = false;
         pushBtn.style.opacity = '1';
       } else {
-        swBtn.classList.remove('on');
-        swText.innerHTML = '<span style="color:#ef4444; font-weight:700;">State: OFF (Circuit Open)</span>';
-        swKnobMesh.position.x = -2.5; // slide left to OFF
+        // Unlatched up (OFF)
+        clickyBtn.classList.remove('latched');
+        clickyText.textContent = 'OFF';
+        pwrText.innerHTML = '<span style="color:#ef4444; font-weight:700;">State: Popped OFF (Circuit Open)</span>';
+        whitePlungerMesh.position.z = Z_FRONT_CARD + 3.4; // Sprung up
         ledDot.classList.remove('active');
         matLED.emissive.setHex(0x000000);
         matLED.emissiveIntensity = 0.0;

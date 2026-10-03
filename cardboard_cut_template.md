@@ -30,12 +30,12 @@
          |             Ø5.0 mm (X=31, Y=72)          |
          |                                           |
  90 mm   |                                           |
- Height  |         [ ROUND PUSH BUTTON ]             |
+ Height  |         [ ROUND VOICE BUTTON ]            |
          |         Ø7.0 mm (X=31, Y=46)              |
          |                                           |
          |                                           |
-         |        [ ON/OFF SLIDE SWITCH ]            |
-         |        8.5 × 4.0 mm (X=31, Y=24)          |
+         |        [ WHITE LATCHING SWITCH ]          |
+         |        Ø5.8 mm Round Hole (X=31, Y=24)    |
          |                                           |
          |\                                         /|
          | \                                       / |
@@ -58,13 +58,12 @@
   2. **5mm Blue Indicator LED Hole**:
      - Hole diameter: $\varnothing 5.0\text{ mm}$
      - Position: $X = 31.0\text{ mm}$ (center), $Y = 72.0\text{ mm}$
-  3. **Round Push Button Switch Hole**:
+  3. **Voice Push Button Switch Hole**:
      - Hole diameter: $\varnothing 7.0\text{ mm}$
      - Position: $X = 31.0\text{ mm}$ (center), $Y = 46.0\text{ mm}$
-  4. **ON/OFF Power Slide Switch Slot**:
-     - Slot dimensions: $8.5\text{ mm (Length)} \times 4.0\text{ mm (Width)}$
+  4. **White Latching Push-Push Power Switch Opening**:
+     - Circular hole diameter: $\varnothing 5.8\text{ mm}$ (neatly accommodates the stepped collar)
      - Position: Centered at $X = 31.0\text{ mm}$, $Y = 24.0\text{ mm}$
-     - Mark "ON" on the right and "OFF" on the left with a fine-tip pen.
 
 ---
 
@@ -95,11 +94,3 @@
 - **Lanyard Cord Holes**:
   - Drill two $\varnothing 3.5\text{ mm}$ holes at the top edge, spaced $16.0\text{ mm}$ apart ($X = 23\text{ mm}$ and $X = 39\text{ mm}$, $Y = 84\text{ mm}$).
   - Thread the neckband lanyard cord through and secure with a small cardboard backing clamp.
-
----
-
-## 3. Starboard (FR4 Perfboard) Cutting Dimensions (Quantity: 3)
-Cut 3 identical perfboard plates:
-- **Size**: **$54.0\text{ mm (Width)} \times 82.0\text{ mm (Height)} \times 1.6\text{ mm (Thickness)}$**
-- **Corner Trim**: Nip $6\text{ mm}$ off each corner so the board fits snugly inside the octagonal perimeter.
-- **Corner Mounting Holes**: Drill four $\varnothing 2.5\text{ mm}$ holes in the corners ($4\text{ mm}$ inset from edges) to accept M2/M2.5 brass standoffs.
